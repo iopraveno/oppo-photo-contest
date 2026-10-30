@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getEntries, getVotedEntryIds } from '@/lib/data';
+import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
-import { isVotingOpen } from '@/lib/contest';
+import { isVotingOpen, plural } from '@/lib/contest';
 import { CONTEST } from '@/lib/config';
 import EntryCard from '@/components/EntryCard';
 
@@ -15,7 +15,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   const params = await searchParams;
   const filter = params.filtr === 'oppo' ? 'oppo' : 'all';
   const sort = params.razeni === 'hlasy' ? 'top' : 'new';
-  const [entries, user] = await Promise.all([getEntries({ filter, sort }), getUser()]);
+  const [entries, user, stats] = await Promise.all([getEntries({ filter, sort }), getUser(), getStats()]);
   const voted = await getVotedEntryIds(user?.id);
   const votingOpen = isVotingOpen();
 
@@ -28,30 +28,35 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   };
 
   return (
-    <section className="section">
-      <div className="wrap">
-        <p className="eyebrow">Galerie</p>
-        <h1 className="section-title">Fotky lovců světla</h1>
-        <p className="section-lead">
-          Hlasovat může každý s ověřeným e-mailem. Každé fotce můžeš dát jeden hlas, fotek ale můžeš podpořit kolik chceš.
-        </p>
+    <section className="section-tight">
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="label">Galerie</span>
+            <h1 className="h2" style={{ marginTop: 12 }}>Fotky lovců světla</h1>
+          </div>
+          <p className="lead">
+            {stats.photos} {plural(stats.photos, 'fotka', 'fotky', 'fotek')} od {stats.entrants}{' '}
+            {plural(stats.entrants, 'autora', 'autorů', 'autorů')}. Každé fotce můžeš dát jeden hlas, fotek ale můžeš podpořit kolik chceš.
+          </p>
+        </div>
         {!user && votingOpen && (
-          <p className="alert alert-info" style={{ marginTop: 16, maxWidth: 720 }}>
-            Pro hlasování se nejdřív <Link href="/prihlaseni?next=/galerie">přihlas e-mailem</Link>. Zabere to minutu.
+          <p className="alert alert-info" style={{ marginBottom: 24 }}>
+            Pro hlasování se <Link href="/prihlaseni?next=/galerie">přihlas e-mailem</Link>. Zabere to minutu a žádné heslo nepotřebuješ.
           </p>
         )}
         <div className="toolbar">
-          <div className="chips">
-            <Link href={href('all', sort)} className={`chip${filter === 'all' ? ' active' : ''}`}>Všechny</Link>
-            <Link href={href('oppo', sort)} className={`chip${filter === 'oppo' ? ' active' : ''}`}>{CONTEST.oppoHashtag}</Link>
+          <div className="filters">
+            <Link href={href('all', sort)} className={`filter${filter === 'all' ? ' active' : ''}`}>Všechny</Link>
+            <Link href={href('oppo', sort)} className={`filter${filter === 'oppo' ? ' active' : ''}`}>{CONTEST.oppoHashtag}</Link>
           </div>
-          <div className="chips">
-            <Link href={href(filter, 'new')} className={`chip${sort === 'new' ? ' active' : ''}`}>Nejnovější</Link>
-            <Link href={href(filter, 'top')} className={`chip${sort === 'top' ? ' active' : ''}`}>Nejvíc hlasů</Link>
+          <div className="filters">
+            <Link href={href(filter, 'new')} className={`filter${sort === 'new' ? ' active' : ''}`}>Nejnovější</Link>
+            <Link href={href(filter, 'top')} className={`filter${sort === 'top' ? ' active' : ''}`}>Nejvíc hlasů</Link>
           </div>
         </div>
         {entries.length === 0 ? (
-          <p className="muted">Zatím tu nic není. První fotky přibudou hned po startu soutěže.</p>
+          <p className="empty">Zatím tu nic není. První fotky přibudou hned po startu soutěže.</p>
         ) : (
           <div className="gallery">
             {entries.map((e) => (

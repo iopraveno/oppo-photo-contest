@@ -11,7 +11,7 @@ export default function ShareButton({ url, text }: { url: string; text: string }
         await navigator.share({ title: 'Lovci světla', text, url });
         return;
       } catch {
-        // user closed the share sheet
+        // the person closed the share sheet
       }
     }
     try {
@@ -24,7 +24,7 @@ export default function ShareButton({ url, text }: { url: string; text: string }
   }
 
   return (
-    <button type="button" className="btn btn-ghost" onClick={share}>
+    <button type="button" className="btn btn-outline" onClick={share}>
       {copied ? 'Odkaz zkopírován ✓' : 'Sdílet a sbírat hlasy'}
     </button>
   );

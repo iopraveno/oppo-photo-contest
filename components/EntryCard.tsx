@@ -19,21 +19,13 @@ export default function EntryCard({
       <InstagramEmbed shortcode={entry.shortcode} author={entry.author_handle} />
       <div className="entry-foot">
         <div style={{ minWidth: 0 }}>
-          <Link href={`/foto/${entry.id}`} className="entry-author">
-            @{entry.author_handle}
-          </Link>
-          {entry.shot_on_oppo && <span className="badge">#ShotOnOPPO</span>}
+          <Link href={`/foto/${entry.id}`} className="entry-author">@{entry.author_handle}</Link>
+          {entry.shot_on_oppo && <span className="badge">Shot on OPPO</span>}
           <div className="entry-meta">
             <Link href={`/foto/${entry.id}`}>Sdílet fotku</Link>
           </div>
         </div>
-        <VoteButton
-          entryId={entry.id}
-          initialVotes={entry.votes}
-          initialVoted={voted}
-          loggedIn={loggedIn}
-          votingOpen={votingOpen}
-        />
+        <VoteButton entryId={entry.id} initialVotes={entry.votes} initialVoted={voted} loggedIn={loggedIn} votingOpen={votingOpen} />
       </div>
     </article>
   );

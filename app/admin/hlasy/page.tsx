@@ -41,7 +41,7 @@ export default async function VotesPage({ searchParams }: { searchParams: Search
 
   return (
     <section className="section">
-      <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
         <div>
           <p className="eyebrow"><Link href="/admin">← Administrace</Link></p>
           <h1 className="section-title">Kontrola hlasů</h1>

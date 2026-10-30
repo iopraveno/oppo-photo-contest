@@ -31,32 +31,33 @@ export default async function PhotoPage({ params }: { params: Params }) {
   const url = `${SITE_URL}/foto/${entry.id}`;
 
   return (
-    <section className="section">
-      <div className="wrap detail">
-        <InstagramEmbed shortcode={entry.shortcode} author={entry.author_handle} />
+    <section className="section-tight">
+      <div className="container detail">
+        <InstagramEmbed shortcode={entry.shortcode} author={entry.author_handle} fallbackHeight={760} />
         <div className="detail-side">
-          <p className="eyebrow">{CONTEST.name}</p>
-          <h1>
-            Fotka od{' '}
-            <a href={instagramProfileUrl(entry.author_handle)} target="_blank" rel="noopener noreferrer">
-              @{entry.author_handle}
-            </a>
-          </h1>
-          {entry.shot_on_oppo && <p><span className="badge" style={{ marginLeft: 0 }}>{CONTEST.oppoHashtag}</span></p>}
-          <VoteButton
-            entryId={entry.id}
-            initialVotes={entry.votes}
-            initialVoted={voted.has(entry.id)}
-            loggedIn={Boolean(user)}
-            votingOpen={isVotingOpen()}
-          />
           <div>
+            <span className="label">{CONTEST.name}</span>
+            <h1 style={{ marginTop: 12 }}>
+              Fotka od{' '}
+              <a href={instagramProfileUrl(entry.author_handle)} target="_blank" rel="noopener noreferrer">@{entry.author_handle}</a>
+            </h1>
+            {entry.shot_on_oppo && <p style={{ marginTop: 12 }}><span className="badge" style={{ marginLeft: 0 }}>Shot on OPPO</span></p>}
+          </div>
+          <div className="detail-actions">
+            <VoteButton
+              entryId={entry.id}
+              initialVotes={entry.votes}
+              initialVoted={voted.has(entry.id)}
+              loggedIn={Boolean(user)}
+              votingOpen={isVotingOpen()}
+              size="large"
+            />
             <ShareButton url={url} text={`Dej hlas mé fotce v soutěži ${CONTEST.name}!`} />
           </div>
-          <p className="muted">
-            Tohle je tvoje fotka? Pošli odkaz kamarádům nebo ho dej do stories. Každý s ověřeným e-mailem může dát jeden hlas.
+          <p className="share-note">
+            Tohle je tvoje fotka? Pošli odkaz kamarádům nebo ho dej do stories. Hlas může dát každý, kdo se přihlásí e-mailem.
           </p>
-          <p>
+          <p className="small">
             <a href={entry.permalink} target="_blank" rel="noopener noreferrer">Otevřít příspěvek na Instagramu</a> ·{' '}
             <Link href="/galerie">Zpět do galerie</Link>
           </p>

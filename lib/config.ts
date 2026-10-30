@@ -23,7 +23,37 @@ export const CONTEST = {
     { at: 150, prize: 'OPPO Find X10' },
   ],
   oppoPrize: 'Poukaz 2 000 Kč na příslušenství v e-shopu OPPO',
+
+  // Allowed themes. Sample photos live in public/img/temata/<slug>.jpg (see public/img/README.md).
+  themes: [
+    {
+      slug: 'zlata-hodina',
+      title: 'Zlatá hodina a západy slunce',
+      text: 'Hodina před západem, kdy je světlo nízké a teplé. Dlouhé stíny, siluety, obloha od žluté po fialovou.',
+      tip: 'V listopadu slunce zapadá kolem čtvrté, zlatá hodina začíná už po třetí.',
+    },
+    {
+      slug: 'modra-hodina',
+      title: 'Modrá hodina a světla města',
+      text: 'Chvíle po západu, kdy obloha zmodrá a rozsvítí se lampy, výlohy a okna. Odrazy na mokré dlažbě.',
+      tip: 'Opři telefon o zábradlí nebo zeď, ať je snímek ostrý i při delší expozici.',
+    },
+    {
+      slug: 'mlha',
+      title: 'Mlha, inverze a první mráz',
+      text: 'Ranní mlha v údolí, inverze nad městem, jinovatka na trávě a větvích. Ticho, vrstvy, jemné přechody.',
+      tip: 'Nejlepší mlha bývá hodinu po rozednění. Vyplatí se vstát.',
+    },
+    {
+      slug: 'zoom',
+      title: 'Detaily z dálky',
+      text: 'Teleobjektiv a to, co pouhým okem nevidíte: věž na obzoru, pták na drátu, okno v protějším domě, měsíc nad střechami.',
+      tip: 'Zkus 3× až 10× zoom a hledej jednoduchou kompozici s jedním hlavním motivem.',
+    },
+  ],
 } as const;
+
+export type Theme = (typeof CONTEST.themes)[number];
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 

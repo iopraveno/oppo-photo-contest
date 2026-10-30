@@ -27,7 +27,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
 
   return (
     <section className="section">
-      <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
         <div>
           <p className="eyebrow">Administrace · {user.email}</p>
           <h1 className="section-title">Správa soutěže</h1>

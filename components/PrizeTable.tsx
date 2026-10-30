@@ -7,7 +7,7 @@ const rows = [
 ];
 
 function prizesForCount(n: number) {
-  return CONTEST.milestones.filter((m) => n >= m.at).map((m) => m.prize).reverse();
+  return CONTEST.milestones.filter((m) => n >= m.at).map((m) => m.prize.replace('OPPO ', '')).reverse();
 }
 
 export default function PrizeTable({ entrants }: { entrants: number }) {
@@ -30,10 +30,10 @@ export default function PrizeTable({ entrants }: { entrants: number }) {
               <tr key={r.label} className={current ? 'current' : undefined}>
                 <td>
                   {r.label}
-                  {current && <strong> · teď</strong>}
+                  {current && <span className="now">teď</span>}
                 </td>
                 {[0, 1, 2].map((i) =>
-                  prizes[i] ? <td key={i}>{prizes[i].replace('OPPO ', '')}</td> : <td key={i} className="locked">zatím zamčeno</td>,
+                  prizes[i] ? <td key={i}>{prizes[i]}</td> : <td key={i} className="locked">zatím zamčeno</td>,
                 )}
               </tr>
             );

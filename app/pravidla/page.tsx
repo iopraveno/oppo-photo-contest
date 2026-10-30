@@ -12,7 +12,7 @@ export default function RulesPage() {
   const h = CONTEST.instagramHandle;
   return (
     <section className="section">
-      <div className="wrap prose">
+      <div className="container prose">
         <p className="eyebrow">Pravidla</p>
         <h1 className="section-title">Pravidla soutěže {CONTEST.fullName}</h1>
         <p className="draft">Návrh pravidel. Před spuštěním je zkontroluje právník.</p>
@@ -35,7 +35,10 @@ export default function RulesPage() {
 
         <h2>4. Jak se zapojit</h2>
         <ul>
-          <li>Zveřejni na svém veřejném Instagramu fotku na téma zimní světlo s hashtagem {CONTEST.hashtag} a označ účet @{h}.</li>
+          <li>
+            Zveřejni na svém veřejném Instagramu fotku na jedno ze soutěžních témat ({CONTEST.themes.map((t) => t.title.toLowerCase()).join('; ')})
+            s hashtagem {CONTEST.hashtag} a označ účet @{h}.
+          </li>
           <li>Musíš sledovat účet @{h}.</li>
           <li>Jeden příspěvek obsahuje jednu fotku (ne album ani story). Soutěžit můžeš nejvýš s jednou fotkou týdně, celkem s {CONTEST.maxEntriesPerPerson}.</li>
           <li>Fotka musí být pořízená mobilním telefonem a musí být tvoje. Běžné úpravy (expozice, barvy, ořez) jsou v pořádku, fotky vytvořené nebo upravené generativní AI ne.</li>

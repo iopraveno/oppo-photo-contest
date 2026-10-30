@@ -15,12 +15,14 @@ export default function VoteButton({
   initialVoted,
   loggedIn,
   votingOpen,
+  size = 'small',
 }: {
   entryId: string;
   initialVotes: number;
   initialVoted: boolean;
   loggedIn: boolean;
   votingOpen: boolean;
+  size?: 'small' | 'large';
 }) {
   const [votes, setVotes] = useState(initialVotes);
   const [voted, setVoted] = useState(initialVoted);
@@ -59,11 +61,11 @@ export default function VoteButton({
     <div>
       <div className="vote">
         <span className="vote-count" aria-live="polite">
-          {votes} <span className="entry-meta">{votesLabel(votes)}</span>
+          {votes} <span>{votesLabel(votes)}</span>
         </span>
         <button
           type="button"
-          className={`btn btn-primary vote-btn${voted ? ' voted' : ''}`}
+          className={`btn btn-black vote-btn${size === 'small' ? ' btn-small' : ''}${voted ? ' voted' : ''}`}
           onClick={vote}
           disabled={voted || pending || !votingOpen}
         >
