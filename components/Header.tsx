@@ -7,7 +7,7 @@ export default async function Header() {
   return (
     <header className="header">
       <div className="container header-inner">
-        <Logo sub="Lovci světla" />
+        <Logo />
         <nav className="nav" aria-label="Hlavní navigace">
           <Link href="/galerie">Galerie</Link>
           <Link href="/zebricek" className="nav-wide">Žebříček</Link>

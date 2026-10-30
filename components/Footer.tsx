@@ -1,17 +1,13 @@
 import Link from 'next/link';
 import { CONTEST, instagramProfileUrl } from '@/lib/config';
-import Logo, { BrandLogo } from './Logo';
+import Logo from './Logo';
 
 export default function Footer() {
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-top">
-          <div className="footer-brands">
-            <Logo />
-            <span className="footer-x">×</span>
-            <BrandLogo brand="oneplus" height={20} />
-          </div>
+          <Logo />
           <div className="footer-links">
             <Link href="/galerie">Galerie</Link>
             <Link href="/zebricek">Žebříček</Link>
@@ -23,10 +19,10 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>{CONTEST.fullName} · {CONTEST.dateRangeLabel}</p>
+          <p>{CONTEST.fullName} | {CONTEST.dateRangeLabel}</p>
           <p>
             Tato soutěž není nijak sponzorována, podporována ani spravována společností Instagram ani s ní není nijak spojena.
-            Ukázkové fotografie byly pořízeny telefony OPPO s fotoaparátem Hasselblad.
+            Ukázkové fotografie byly pořízeny telefony OPPO Find X10 Series s fotoaparátem Hasselblad.
           </p>
         </div>
       </div>

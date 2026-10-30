@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CONTEST, instagramProfileUrl } from '@/lib/config';
-import { getPhase, isVotingOpen, longDate, nextMilestone, plural } from '@/lib/contest';
+import { getPhase, isVotingOpen, longDate } from '@/lib/contest';
 import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
 import { img } from '@/lib/images';
@@ -9,7 +9,6 @@ import Milestones from '@/components/Milestones';
 import PrizeTable from '@/components/PrizeTable';
 import Themes from '@/components/Themes';
 import CopyChip from '@/components/CopyChip';
-import { BrandLogo } from '@/components/Logo';
 import Mosaic from '@/components/Mosaic';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +29,6 @@ export default async function HomePage() {
   const hero = img('hero.jpg');
   const community = img('community.jpg');
   const xpan = img('xpan.jpg');
-  const next = nextMilestone(stats.entrants);
 
   return (
     <>
@@ -38,7 +36,9 @@ export default async function HomePage() {
         {hero ? <img className="hero-img" src={hero} alt="" fetchPriority="high" /> : <div className="hero-fallback" />}
         <div className="hero-shade" />
         <div className="container hero-content">
-          <span className="label" style={{ color: '#e6e6e6' }}>OPPO Photo Contest · {CONTEST.dateRangeLabel}</span>
+          <span className="hero-status">
+            <span className="live-dot" aria-hidden /> {phaseText[phase]}
+          </span>
           <h1>Lovci světla</h1>
           <p className="lead">
             Zimní světlo očima české komunity. Vyfoť ho, dej na Instagram a nech ostatní, ať rozhodnou. Hraje se o OPPO Find X10.
@@ -47,29 +47,10 @@ export default async function HomePage() {
             <a href="#jak" className="btn btn-white">Jak se zapojit</a>
             <Link href="/galerie" className="btn btn-outline">Hlasovat</Link>
           </div>
+          <p className="hero-meta">OPPO Photo Contest | {CONTEST.dateRangeLabel}</p>
         </div>
-        {hero && <span className="hero-credit">Vyfoceno na OPPO Find X10 Pro Max · Hasselblad</span>}
+        {hero && <span className="hero-credit">Vyfoceno na OPPO Find X10 Series</span>}
       </section>
-
-      <div className="strip">
-        <div className="container strip-inner">
-          <div className="strip-item">
-            <span className="label live">{phaseText[phase]}</span>
-          </div>
-          <div className="strip-item">
-            <span className="strip-num">{stats.entrants}</span>
-            <span className="small muted">{plural(stats.entrants, 'soutěžící', 'soutěžící', 'soutěžících')}</span>
-          </div>
-          <div className="strip-item">
-            <span className="strip-num">{stats.votes}</span>
-            <span className="small muted">{plural(stats.votes, 'hlas', 'hlasy', 'hlasů')}</span>
-          </div>
-          <div className="strip-item">
-            <span className="strip-num accent">{next ? next.at - stats.entrants : 0}</span>
-            <span className="small muted">{next ? `chybí do ${next.prize.replace('OPPO ', '')}` : 'vše odemčeno'}</span>
-          </div>
-        </div>
-      </div>
 
       <section className="section">
         <div className="container statement">
@@ -84,31 +65,37 @@ export default async function HomePage() {
       </section>
 
       <section className="section paper" id="jak">
-        <div className="container">
-          <div className="section-head">
-            <h2 className="h2">Stačí jeden příspěvek</h2>
-            <p className="lead">Žádné formuláře ani registrace. Fotku si najdeme sami a do 24 hodin ji přidáme do galerie.</p>
+        <div className="container howto">
+          <div className="howto-intro">
+            <span className="label label-accent">Jak se zapojit</span>
+            <h2 className="h2" style={{ marginTop: 12 }}>Stačí jeden příspěvek</h2>
+            <p className="lead" style={{ marginTop: 16 }}>Žádné formuláře ani registrace. Fotku si najdeme sami a do 24 hodin ji přidáme do galerie.</p>
           </div>
-          <ol className="steps" style={{ listStyle: 'none', padding: 0 }}>
-            <li className="step">
-              <span className="step-num">01</span>
-              <h3>Vyfoť zimní světlo</h3>
-              <p>Jedno ze čtyř témat níže. Zlatá hodina, modrá hodina, mlha nebo detail z dálky.</p>
-            </li>
-            <li className="step">
-              <span className="step-num">02</span>
-              <h3>Dej ji na Instagram</h3>
-              <p>Do popisku přidej hashtag a označ nás. Fotíš na OPPO nebo OnePlus? Přidej i #ShotOnOPPO a hraješ o cenu navíc.</p>
-              <div className="chips">
-                <CopyChip text={CONTEST.hashtag} />
-                <CopyChip text={`@${handle}`} />
-                <CopyChip text={CONTEST.oppoHashtag} />
+          <ol className="howto-steps">
+            <li className="howto-step">
+              <span className="howto-num">1</span>
+              <div>
+                <h3>Vyfoť zimní světlo</h3>
+                <p>Jedno ze čtyř témat: zlatá hodina, modrá hodina, mlha nebo detail z dálky. Na jakýkoli mobil.</p>
               </div>
             </li>
-            <li className="step">
-              <span className="step-num">03</span>
-              <h3>Sbírej hlasy</h3>
-              <p>Každá fotka má vlastní stránku s odkazem ke sdílení. Pošli ho kamarádům a dej do stories.</p>
+            <li className="howto-step">
+              <span className="howto-num">2</span>
+              <div>
+                <h3>Dej ji na Instagram</h3>
+                <p>Do popisku přidej hashtag a označ nás. Fotíš na OPPO nebo OnePlus? Přidej i #ShotOnOPPO a hraješ o cenu navíc.</p>
+                <div className="chips">
+                  <CopyChip text={`${CONTEST.hashtag} @${handle}`} label="Zkopírovat popisek" />
+                  <CopyChip text={CONTEST.oppoHashtag} />
+                </div>
+              </div>
+            </li>
+            <li className="howto-step">
+              <span className="howto-num">3</span>
+              <div>
+                <h3>Sbírej hlasy</h3>
+                <p>Každá fotka má vlastní stránku s odkazem ke sdílení. Pošli ho kamarádům a dej do stories.</p>
+              </div>
             </li>
           </ol>
           <p className="fineprint">
@@ -123,7 +110,7 @@ export default async function HomePage() {
         <div className="container">
           <div className="section-head">
             <h2 className="h2">Čtyři témata, jedno světlo</h2>
-            <p className="lead">Soutěží se jen s fotkami na tato témata. Ukázky jsou z telefonů OPPO, ať víš, kam mířit.</p>
+            <p className="lead">Soutěží se jen s fotkami na tato témata. Ukázky jsou z OPPO Find X10 Series, ať víš, kam mířit.</p>
           </div>
           <Themes />
         </div>
@@ -131,15 +118,15 @@ export default async function HomePage() {
 
       {xpan && (
         <div className="pano">
-          <img src={xpan} alt="Panoramatický snímek horské louky v ranním světle, vyfoceno na OPPO Find X10" loading="lazy" />
-          <span className="pano-caption">Režim XPAN · OPPO Find X10</span>
+          <img src={xpan} alt="Panoramatický snímek horské louky v ranním světle, vyfoceno na OPPO Find X10 Series" loading="lazy" />
+          <span className="pano-caption">Režim XPAN | OPPO Find X10 Series</span>
         </div>
       )}
 
       <section className="section">
         <div className="container">
-          <div className="section-head">
-            <h2 className="h2">Takhle vidí svět Find X10</h2>
+          <div className="section-head section-head-stack">
+            <h2 className="h2 h2-wide">Takhle vidí svět Find X10 Series</h2>
             <p className="lead">
               Všechny fotky na téhle stránce jsou z OPPO Find X10 a Find X10 Pro Max s fotoaparátem Hasselblad. Žádný velký
               foťák, jen telefon v kapse.
@@ -149,13 +136,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section dark">
+      <section className="section dark" id="milniky">
         <div className="container">
           <div className="section-head">
             <h2 className="h2">Čím víc nás bude, tím víc vyhrajeme</h2>
             <p className="lead">Ceny neodemyká OPPO, odemyká je komunita. Počet soutěžících rozhodne, o co se hraje.</p>
           </div>
-          <Milestones entrants={stats.entrants} />
+          <Milestones stats={stats} />
         </div>
       </section>
 
@@ -170,12 +157,7 @@ export default async function HomePage() {
             <div>
               <span className="label label-accent">Shot on OPPO</span>
               <h3>Poukaz 2 000 Kč do e-shopu OPPO</h3>
-              <p>Pro nejvíc hlasovanou fotku s {CONTEST.oppoHashtag}. Na příslušenství, sluchátka nebo hodinky.</p>
-              <div className="brand-row">
-                <span className="small muted">Pro majitele</span>
-                <BrandLogo brand="oppo" variant="dark" height={14} />
-                <BrandLogo brand="oneplus" variant="dark" height={14} />
-              </div>
+              <p>Pro nejvíc hlasovanou fotku s {CONTEST.oppoHashtag}. Pro majitele telefonů OPPO a OnePlus, na příslušenství, sluchátka nebo hodinky.</p>
             </div>
             <div>
               <span className="label label-accent">Výherce Find X10</span>

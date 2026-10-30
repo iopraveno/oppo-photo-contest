@@ -1,47 +1,60 @@
 import { CONTEST } from '@/lib/config';
 import { nextMilestone, plural } from '@/lib/contest';
-import { img } from '@/lib/images';
+import type { Stats } from '@/lib/data';
 
-const prizeImages: Record<number, string> = { 0: 'prize-air5pro.png', 50: 'prize-watch-s.png', 150: 'prize-find-x10.png' };
+const blurbs: Record<number, string> = {
+  0: 'Sluchátka s aktivním potlačením hluku. V hře od prvního dne.',
+  50: 'Chytré hodinky s AMOLED displejem. Odemkne je padesátý soutěžící.',
+  150: 'Vlajková loď s fotoaparátem Hasselblad. Hlavní cena pro vítěze.',
+};
 
-export default function Milestones({ entrants }: { entrants: number }) {
+export default function Milestones({ stats }: { stats: Stats }) {
+  const { entrants } = stats;
   const top = CONTEST.milestones[CONTEST.milestones.length - 1].at;
-  const pct = Math.min(100, Math.round((entrants / top) * 100));
+  const pct = Math.min(100, (entrants / top) * 100);
   const next = nextMilestone(entrants);
   const missing = next ? next.at - entrants : 0;
 
   return (
-    <div className="milestone-wrap">
-      <div className="counter">
-        <span className="label">Zapojilo se</span>
-        <span className="counter-num">{entrants}</span>
-        <span className="counter-text">
-          {plural(entrants, 'lovec světla. Každý další posune celou komunitu blíž k další ceně.', 'lovci světla. Každý další posune celou komunitu blíž k další ceně.', 'lovců světla. Každý další posune celou komunitu blíž k další ceně.')}
-        </span>
-        <span className="counter-next">
+    <div className="ms">
+      <div className="ms-head">
+        <div className="ms-count">
+          <span className="ms-num">{entrants}</span>
+          <span className="ms-count-label">
+            {plural(entrants, 'soutěžící', 'soutěžící', 'soutěžících')}
+            <br />
+            {stats.votes} {plural(stats.votes, 'hlas', 'hlasy', 'hlasů')}
+          </span>
+        </div>
+        <p className="ms-next">
           {next
-            ? `Do odemčení ${next.prize.replace('OPPO ', '')} chybí ${missing} ${plural(missing, 'soutěžící', 'soutěžící', 'soutěžících')}.`
-            : 'Všechny ceny jsou odemčené, včetně Find X10.'}
-        </span>
+            ? <>Do odemčení <strong>{next.prize.replace('OPPO ', '')}</strong> chybí {missing} {plural(missing, 'soutěžící', 'soutěžící', 'soutěžících')}.</>
+            : <>Všechny ceny jsou odemčené, včetně <strong>Find X10</strong>.</>}
+        </p>
       </div>
-      <div className="track">
-        <div className="track-bar" role="progressbar" aria-valuemin={0} aria-valuemax={top} aria-valuenow={entrants} aria-label="Postup k hlavní výhře">
-          <div className="track-fill" style={{ width: `${pct}%` }} />
-        </div>
-        <div className="track-points">
-          {CONTEST.milestones.map((m) => {
-            const unlocked = entrants >= m.at;
-            const src = img(prizeImages[m.at]);
-            return (
-              <div key={m.at} className={`track-point${unlocked ? ' unlocked' : ''}`}>
-                {src && <img className="track-img" src={src} alt={m.prize} loading="lazy" />}
-                <div className="track-at">{m.at === 0 ? 'Od startu' : `${m.at} soutěžících`}</div>
-                <div className="track-prize">{m.prize.replace('OPPO ', '')}</div>
-                <div className="track-state">{unlocked ? 'Odemčeno' : 'Zatím zamčeno'}</div>
+
+      <div className="ms-bar" role="progressbar" aria-valuemin={0} aria-valuemax={top} aria-valuenow={entrants} aria-label="Postup k hlavní výhře">
+        <div className="ms-fill" style={{ width: `${pct}%` }} />
+        {CONTEST.milestones.map((m) => (
+          <span key={m.at} className={`ms-tick${entrants >= m.at ? ' on' : ''}`} style={{ left: `${(m.at / top) * 100}%` }} />
+        ))}
+      </div>
+
+      <div className="ms-cards">
+        {CONTEST.milestones.map((m, i) => {
+          const unlocked = entrants >= m.at;
+          return (
+            <div key={m.at} className={`ms-card${unlocked ? ' on' : ''}`}>
+              <div className="ms-card-top">
+                <span className="ms-card-at">{m.at === 0 ? 'Od startu' : `${m.at} soutěžících`}</span>
+                <span className={`ms-pill${unlocked ? ' on' : ''}`}>{unlocked ? 'Odemčeno' : 'Zamčeno'}</span>
               </div>
-            );
-          })}
-        </div>
+              <div className="ms-card-prize">{m.prize.replace('OPPO ', '')}</div>
+              <p className="ms-card-text">{blurbs[m.at]}</p>
+              <span className="ms-card-place">{i === 0 ? '1. místo' : i === 1 ? 'nové 1. místo, předchozí cena jde na 2.' : 'nové 1. místo, ostatní se posunou'}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

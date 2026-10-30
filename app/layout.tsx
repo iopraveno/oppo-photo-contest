@@ -6,10 +6,10 @@ import { CONTEST, SITE_URL } from '@/lib/config';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${CONTEST.name} · OPPO Photo Contest`, template: `%s · ${CONTEST.name}` },
+  title: { default: `OPPO Photo Contest | ${CONTEST.name}`, template: `%s | ${CONTEST.name}` },
   description: 'Vyfoť zimní světlo, sdílej ho na Instagramu a nech komunitu rozhodnout. Hraje se o OPPO Find X10.',
   openGraph: {
-    title: `${CONTEST.name} · OPPO Photo Contest`,
+    title: `OPPO Photo Contest | ${CONTEST.name}`,
     description: 'Vyfoť zimní světlo, sdílej ho na Instagramu a nech komunitu rozhodnout.',
     locale: 'cs_CZ',
     type: 'website',

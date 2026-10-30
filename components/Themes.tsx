@@ -7,19 +7,20 @@ export default function Themes() {
       {CONTEST.themes.map((t, i) => {
         const photos = themePhotos(t.slug);
         const [main, ...more] = photos;
+        const extras = more.slice(0, 2);
         return (
           <article key={t.slug} id={t.slug} className={`theme${i % 2 === 1 ? ' flip' : ''}`}>
             <div>
               <div className="theme-media">
                 {main ? (
-                  <img src={main} alt={`Ukázka tématu ${t.title}, vyfoceno na OPPO`} loading={i === 0 ? 'eager' : 'lazy'} />
+                  <img src={main} alt={`Ukázka tématu ${t.title}, vyfoceno na OPPO Find X10 Series`} loading={i === 0 ? 'eager' : 'lazy'} />
                 ) : (
-                  <div className="placeholder">Ukázka · {t.title}</div>
+                  <div className="placeholder">Ukázka | {t.title}</div>
                 )}
               </div>
-              {more.length > 0 && (
+              {extras.length === 2 && (
                 <div className="theme-strip">
-                  {more.slice(0, 3).map((src) => (
+                  {extras.map((src) => (
                     <img key={src} src={src} alt="" loading="lazy" />
                   ))}
                 </div>
@@ -33,7 +34,7 @@ export default function Themes() {
                 <strong>Tip</strong>
                 <span>{t.tip}</span>
               </div>
-              <span className="theme-credit">Ukázky vyfoceny na OPPO s fotoaparátem Hasselblad.</span>
+              <span className="theme-credit">Vyfoceno na OPPO Find X10 Series s fotoaparátem Hasselblad.</span>
             </div>
           </article>
         );
