@@ -156,6 +156,22 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 .theme-tip strong { color: var(--oppo); white-space: nowrap; }
 .theme-credit { font-size: 13px; color: var(--grey); }
 
+/* Mosaic wall */
+.mosaic { display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; grid-auto-flow: dense; }
+@media (min-width: 700px) { .mosaic { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 220px; } }
+@media (min-width: 1100px) { .mosaic { grid-template-columns: repeat(6, 1fr); grid-auto-rows: 240px; } }
+.mosaic-item { margin: 0; overflow: hidden; background: #1a1a1a; border-radius: 3px; }
+.mosaic-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+.mosaic-item:hover img { transform: scale(1.03); }
+.mosaic-item.wide { grid-column: span 2; }
+.mosaic-item.tall { grid-row: span 2; }
+.mosaic-item.big { grid-column: span 2; grid-row: span 2; }
+
+/* Panorama band */
+.pano { position: relative; background: #000; }
+.pano img { width: 100%; height: auto; display: block; }
+.pano-caption { position: absolute; left: var(--gutter); bottom: 20px; color: #fff; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+
 /* Milestones */
 .milestone-wrap { display: grid; gap: 40px; }
 @media (min-width: 960px) { .milestone-wrap { grid-template-columns: 5fr 7fr; gap: 72px; align-items: center; } }

@@ -3,6 +3,8 @@
 Sem patří soubory od OPPO. Web si je načte sám, nic dalšího není potřeba nastavovat.
 Dokud soubor chybí, web místo něj ukáže jednobarevnou plochu nebo text.
 
+Současné fotky jsou z oficiálních ukázek OPPO Find X10 (Uranus) a Find X10 Pro Max (Mars) s průhledným vodoznakem. Nahrazení = přepsat soubor se stejným názvem.
+
 ## Logo a velké fotky
 
 | Soubor | Kde se použije |
@@ -29,3 +31,10 @@ Fotky na šířku i na výšku jsou v pořádku, web je ořízne.
 ## Produkty u milníků (volitelné)
 
 `prize-air5pro.png`, `prize-watch-s.png`, `prize-find-x10.png`, průhledné pozadí.
+
+## Další
+
+| Soubor | Kde se použije |
+| --- | --- |
+| `xpan.jpg` | panoramatický pás pod tématy |
+| `mozaika/*.jpg` | fotostěna „Takhle vidí svět Find X10“, v pořadí podle názvu |

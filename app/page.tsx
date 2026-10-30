@@ -10,6 +10,7 @@ import PrizeTable from '@/components/PrizeTable';
 import Themes from '@/components/Themes';
 import CopyChip from '@/components/CopyChip';
 import { BrandLogo } from '@/components/Logo';
+import Mosaic from '@/components/Mosaic';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,7 @@ export default async function HomePage() {
   const handle = CONTEST.instagramHandle;
   const hero = img('hero.jpg');
   const community = img('community.jpg');
+  const xpan = img('xpan.jpg');
   const next = nextMilestone(stats.entrants);
 
   return (
@@ -46,7 +48,7 @@ export default async function HomePage() {
             <Link href="/galerie" className="btn btn-outline">Hlasovat</Link>
           </div>
         </div>
-        {hero && <span className="hero-credit">Vyfoceno na OPPO · Hasselblad</span>}
+        {hero && <span className="hero-credit">Vyfoceno na OPPO Find X10 Pro Max · Hasselblad</span>}
       </section>
 
       <div className="strip">
@@ -124,6 +126,26 @@ export default async function HomePage() {
             <p className="lead">Soutěží se jen s fotkami na tato témata. Ukázky jsou z telefonů OPPO, ať víš, kam mířit.</p>
           </div>
           <Themes />
+        </div>
+      </section>
+
+      {xpan && (
+        <div className="pano">
+          <img src={xpan} alt="Panoramatický snímek horské louky v ranním světle, vyfoceno na OPPO Find X10" loading="lazy" />
+          <span className="pano-caption">Režim XPAN · OPPO Find X10</span>
+        </div>
+      )}
+
+      <section className="section">
+        <div className="container">
+          <div className="section-head">
+            <h2 className="h2">Takhle vidí svět Find X10</h2>
+            <p className="lead">
+              Všechny fotky na téhle stránce jsou z OPPO Find X10 a Find X10 Pro Max s fotoaparátem Hasselblad. Žádný velký
+              foťák, jen telefon v kapse.
+            </p>
+          </div>
+          <Mosaic />
         </div>
       </section>
 

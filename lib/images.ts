@@ -9,6 +9,16 @@ export function img(name: string): string | null {
   return existsSync(join(IMG_DIR, name)) ? `/img/${name}` : null;
 }
 
+/** Photos for the "Shot on OPPO" wall: public/img/mozaika/*.jpg in file-name order. */
+export function mosaicPhotos(): string[] {
+  const dir = join(IMG_DIR, 'mozaika');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
+    .sort()
+    .map((f) => `/img/mozaika/${f}`);
+}
+
 /** All photos of one theme: public/img/temata/<slug>.jpg, <slug>-2.jpg, … in order. */
 export function themePhotos(slug: string): string[] {
   const dir = join(IMG_DIR, 'temata');
