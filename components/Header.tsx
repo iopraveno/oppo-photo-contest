@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { getUser, isAdminEmail } from '@/lib/auth';
 import Logo from './Logo';
+import HeaderShell from './HeaderShell';
 
 export default async function Header() {
   const user = await getUser();
   return (
-    <header className="header">
+    <HeaderShell>
       <div className="container header-inner">
         <Logo />
         <nav className="nav" aria-label="Hlavní navigace">
@@ -23,6 +24,6 @@ export default async function Header() {
           )}
         </nav>
       </div>
-    </header>
+    </HeaderShell>
   );
 }

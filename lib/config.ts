@@ -5,7 +5,7 @@ export const CONTEST = {
   fullName: 'OPPO Photo Contest: Lovci světla',
   hashtag: '#OPPOLovciSvetla',
   oppoHashtag: '#ShotOnOPPO',
-  instagramHandle: process.env.NEXT_PUBLIC_IG_HANDLE || 'OPPO_CZ_HANDLE',
+  instagramHandle: process.env.NEXT_PUBLIC_IG_HANDLE || 'oppo_cesko',
 
   // Times are Prague time (CET, UTC+1 in November).
   start: '2026-11-04T00:00:00+01:00',
@@ -54,6 +54,13 @@ export const CONTEST = {
 } as const;
 
 export type Theme = (typeof CONTEST.themes)[number];
+
+export const SOCIALS = [
+  { name: 'Instagram', url: 'https://www.instagram.com/oppo_cesko/' },
+  { name: 'Facebook', url: 'https://www.facebook.com/oppocesko/' },
+  { name: 'YouTube', url: 'https://www.youtube.com/@OPPOCesko' },
+  { name: 'TikTok', url: 'https://www.tiktok.com/@oppocesko' },
+] as const;
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 

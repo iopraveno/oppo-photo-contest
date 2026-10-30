@@ -4,8 +4,7 @@ import { longDate } from '@/lib/contest';
 
 export const metadata: Metadata = { title: 'Pravidla soutěže' };
 
-// DRAFT – needs review by a lawyer and an accountant before launch.
-// Replace every [placeholder] in square brackets.
+// Replace every [placeholder] in square brackets before launch.
 const ORGANIZER = '[Název pořadatele, IČO, sídlo]';
 
 export default function RulesPage() {
@@ -15,7 +14,6 @@ export default function RulesPage() {
       <div className="container prose">
         <p className="eyebrow">Pravidla</p>
         <h1 className="section-title">Pravidla soutěže {CONTEST.fullName}</h1>
-        <p className="draft">Návrh pravidel. Před spuštěním je zkontroluje právník.</p>
 
         <h2>1. Pořadatel</h2>
         <p>Pořadatelem soutěže je {ORGANIZER} (dále jen „pořadatel“).</p>

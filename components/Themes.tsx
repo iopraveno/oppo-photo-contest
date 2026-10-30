@@ -7,7 +7,7 @@ export default function Themes() {
       {CONTEST.themes.map((t, i) => {
         const photos = themePhotos(t.slug);
         const [main, ...more] = photos;
-        const extras = more.slice(0, 2);
+        const extras = more.slice(0, 3);
         return (
           <article key={t.slug} id={t.slug} className={`theme${i % 2 === 1 ? ' flip' : ''}`}>
             <div>
@@ -18,7 +18,7 @@ export default function Themes() {
                   <div className="placeholder">Ukázka | {t.title}</div>
                 )}
               </div>
-              {extras.length === 2 && (
+              {extras.length === 3 && (
                 <div className="theme-strip">
                   {extras.map((src) => (
                     <img key={src} src={src} alt="" loading="lazy" />

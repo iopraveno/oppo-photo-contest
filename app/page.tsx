@@ -36,9 +36,6 @@ export default async function HomePage() {
         {hero ? <img className="hero-img" src={hero} alt="" fetchPriority="high" /> : <div className="hero-fallback" />}
         <div className="hero-shade" />
         <div className="container hero-content">
-          <span className="hero-status">
-            <span className="live-dot" aria-hidden /> {phaseText[phase]}
-          </span>
           <h1>Lovci světla</h1>
           <p className="lead">
             Zimní světlo očima české komunity. Vyfoť ho, dej na Instagram a nech ostatní, ať rozhodnou. Hraje se o OPPO Find X10.
@@ -47,7 +44,7 @@ export default async function HomePage() {
             <a href="#jak" className="btn btn-white">Jak se zapojit</a>
             <Link href="/galerie" className="btn btn-outline">Hlasovat</Link>
           </div>
-          <p className="hero-meta">OPPO Photo Contest | {CONTEST.dateRangeLabel}</p>
+          <p className="hero-meta">{phaseText[phase]}</p>
         </div>
         {hero && <span className="hero-credit">Vyfoceno na OPPO Find X10 Series</span>}
       </section>
