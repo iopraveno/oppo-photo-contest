@@ -1,30 +1,23 @@
-import 'server-only';
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import manifest from './generated/images.json';
 
-const IMG_DIR = join(process.cwd(), 'public', 'img');
+// public/img listed at build time by scripts/image-manifest.mjs (runs before `next build` and `next dev`).
+const files = new Set<string>(manifest as string[]);
 
-/** Returns the public URL of an image in public/img, or null when the file is not there yet. */
+/** Returns the public URL of an image in public/img, or null when the file is not there. */
 export function img(name: string): string | null {
-  return existsSync(join(IMG_DIR, name)) ? `/img/${name}` : null;
+  return files.has(name) ? `/img/${name}` : null;
 }
 
 /** Photos for the "Shot on OPPO" wall: public/img/mozaika/*.jpg in file-name order. */
 export function mosaicPhotos(): string[] {
-  const dir = join(IMG_DIR, 'mozaika');
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
-    .sort()
-    .map((f) => `/img/mozaika/${f}`);
+  return [...files].filter((f) => f.startsWith('mozaika/')).sort().map((f) => `/img/${f}`);
 }
 
 /** All photos of one theme: public/img/temata/<slug>.jpg, <slug>-2.jpg, … in order. */
 export function themePhotos(slug: string): string[] {
-  const dir = join(IMG_DIR, 'temata');
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((f) => new RegExp(`^${slug}(-\\d+)?\\.(jpe?g|png|webp)$`, 'i').test(f))
+  const re = new RegExp(`^temata/${slug}(-\\d+)?\\.(jpe?g|png|webp)$`, 'i');
+  return [...files]
+    .filter((f) => re.test(f))
     .sort((a, b) => a.length - b.length || a.localeCompare(b))
-    .map((f) => `/img/temata/${f}`);
+    .map((f) => `/img/${f}`);
 }

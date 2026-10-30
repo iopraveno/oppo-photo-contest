@@ -52,7 +52,10 @@ export async function getEntries(opts: { filter?: 'all' | 'oppo'; sort?: 'new' |
       : query.order('created_at', { ascending: false });
   if (limit) query = query.limit(limit);
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {
+    console.error('getEntries failed (is supabase/schema.sql applied?):', error.message);
+    return [];
+  }
   return (data ?? []) as Entry[];
 }
 
@@ -60,7 +63,8 @@ export async function getEntry(id: string): Promise<Entry | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   if (!isSupabaseConfigured()) return DEMO ? demoEntries.find((e) => e.id === id) ?? null : null;
   const supabase = createAdminClient();
-  const { data } = await supabase.from('entry_scores').select('*').eq('id', id).eq('hidden', false).maybeSingle();
+  const { data, error } = await supabase.from('entry_scores').select('*').eq('id', id).eq('hidden', false).maybeSingle();
+  if (error) console.error('getEntry failed:', error.message);
   return (data as Entry) ?? null;
 }
 
@@ -74,10 +78,11 @@ export async function getStats(): Promise<Stats> {
     };
   }
   const supabase = createAdminClient();
-  const [{ data: entries }, { count: votes }] = await Promise.all([
+  const [{ data: entries, error }, { count: votes }] = await Promise.all([
     supabase.from('entries').select('author_handle').eq('hidden', false),
     supabase.from('votes').select('id', { count: 'exact', head: true }),
   ]);
+  if (error) console.error('getStats failed (is supabase/schema.sql applied?):', error.message);
   const handles = new Set((entries ?? []).map((e) => String(e.author_handle).toLowerCase()));
   return { entrants: handles.size, photos: entries?.length ?? 0, votes: votes ?? 0 };
 }
