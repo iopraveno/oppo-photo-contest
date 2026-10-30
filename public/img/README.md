@@ -7,8 +7,9 @@ Dokud soubor chybí, web místo něj ukáže jednobarevnou plochu nebo text.
 
 | Soubor | Kde se použije |
 | --- | --- |
-| `oppo-logo-white.svg` | logo v hlavičce a patičce (na tmavém pozadí) |
-| `oppo-logo.svg` | logo na světlém pozadí |
+| `oppo-logo-white.png` (nebo .svg) | logo v hlavičce a patičce (na tmavém pozadí), už nahráno |
+| `oppo-logo.png` (nebo .svg) | logo na světlém pozadí, už nahráno |
+| `oneplus-logo.png`, `oneplus-logo-white.png` | logo OnePlus u ceny Shot on OPPO a v patičce, už nahráno |
 | `hero.jpg` | velká fotka v úvodu, na šířku, min. 2400 px (ideálně západ slunce nebo zimní světlo) |
 | `community.jpg` | fotka za sekcí „Komunita rozhoduje“, na šířku |
 

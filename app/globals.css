@@ -290,6 +290,9 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 12px; l
 /* Footer */
 .footer { background: var(--black); color: var(--mist); padding: 56px 0 40px; font-size: 14px; }
 .footer-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: center; padding-bottom: 32px; border-bottom: 1px solid var(--line-dark); }
+.footer-brands { display: flex; align-items: center; gap: 18px; }
+.footer-x { color: var(--grey); font-size: 18px; }
+.brand-row { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
 .footer-links a { color: var(--white); text-decoration: none; }
 .footer-links a:hover { text-decoration: underline; }

@@ -9,6 +9,7 @@ import Milestones from '@/components/Milestones';
 import PrizeTable from '@/components/PrizeTable';
 import Themes from '@/components/Themes';
 import CopyChip from '@/components/CopyChip';
+import { BrandLogo } from '@/components/Logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,6 +149,11 @@ export default async function HomePage() {
               <span className="label label-accent">Shot on OPPO</span>
               <h3>Poukaz 2 000 Kč do e-shopu OPPO</h3>
               <p>Pro nejvíc hlasovanou fotku s {CONTEST.oppoHashtag}. Na příslušenství, sluchátka nebo hodinky.</p>
+              <div className="brand-row">
+                <span className="small muted">Pro majitele</span>
+                <BrandLogo brand="oppo" variant="dark" height={14} />
+                <BrandLogo brand="oneplus" variant="dark" height={14} />
+              </div>
             </div>
             <div>
               <span className="label label-accent">Výherce Find X10</span>

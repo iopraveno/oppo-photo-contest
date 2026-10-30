@@ -1,13 +1,17 @@
 import Link from 'next/link';
 import { CONTEST, instagramProfileUrl } from '@/lib/config';
-import Logo from './Logo';
+import Logo, { BrandLogo } from './Logo';
 
 export default function Footer() {
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-top">
-          <Logo />
+          <div className="footer-brands">
+            <Logo />
+            <span className="footer-x">×</span>
+            <BrandLogo brand="oneplus" height={20} />
+          </div>
           <div className="footer-links">
             <Link href="/galerie">Galerie</Link>
             <Link href="/zebricek">Žebříček</Link>
