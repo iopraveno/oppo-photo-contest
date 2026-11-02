@@ -88,7 +88,8 @@ export default function RulesPage() {
         <p>
           Soutěžící prohlašuje, že je autorem fotky a že má souhlas osob, které jsou na ní zachycené. Zveřejněním fotky v soutěži
           uděluje pořadateli bezúplatnou nevýhradní licenci fotku užít, sdílet a upravit pro propagaci soutěže a značek OPPO a
-          OnePlus, vždy s uvedením autora, a to po dobu [doplnit dobu].
+          OnePlus, vždy s uvedením autora, a to po dobu 2 let od skončení soutěže. Příspěvky a materiály zveřejněné během této doby
+          není pořadatel povinen po jejím uplynutí odstraňovat.
         </p>
 
         <h2>10. Osobní údaje</h2>
