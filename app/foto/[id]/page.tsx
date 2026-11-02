@@ -58,7 +58,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
             Tohle je tvoje fotka? Pošli odkaz kamarádům nebo ho dej do stories. Hlas může dát každý, kdo se přihlásí e-mailem.
           </p>
           <p className="small">
-            <a href={entry.permalink} target="_blank" rel="noopener noreferrer">Otevřít příspěvek na Instagramu</a> ·{' '}
+            <a href={entry.permalink} target="_blank" rel="noopener noreferrer">Otevřít příspěvek na Instagramu</a> |{' '}
             <Link href="/galerie">Zpět do galerie</Link>
           </p>
         </div>

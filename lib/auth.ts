@@ -25,6 +25,6 @@ export function isAdminEmail(email: string | null | undefined) {
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await getUser();
   if (!user) redirect('/prihlaseni?next=/admin');
-  if (!isAdminEmail(user.email)) redirect('/');
+  if (!isAdminEmail(user.email)) redirect('/bez-pristupu');
   return user;
 }
