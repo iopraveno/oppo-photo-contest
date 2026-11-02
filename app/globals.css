@@ -233,7 +233,8 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 12px; l
 .filter.active { background: var(--black); color: var(--white); border-color: var(--black); }
 .gallery { display: grid; gap: 40px 24px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .entry { display: flex; flex-direction: column; }
-.embed { width: 100%; border: 0; display: block; background: var(--paper); border-radius: 4px; }
+.embed-wrap { overflow: hidden; border-radius: 4px; background: var(--paper); }
+.embed { width: 100%; border: 0; display: block; background: var(--paper); }
 .entry-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-top: 14px; }
 .entry-author { font-weight: 700; text-decoration: none; }
 .entry-author:hover { text-decoration: underline; }
