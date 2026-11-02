@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CONTEST, SOCIALS } from '@/lib/config';
+import { CONTEST, SOCIALS, ORGANIZER } from '@/lib/config';
 import Logo from './Logo';
 
 const icons: Record<string, React.ReactNode> = {
@@ -38,6 +38,7 @@ export default function Footer() {
             <Link href="/zebricek">Žebříček</Link>
             <Link href="/#temata">Témata</Link>
             <Link href="/pravidla">Pravidla soutěže</Link>
+            <Link href="/ochrana-osobnich-udaju">Osobní údaje</Link>
           </div>
           <div className="footer-social">
             {SOCIALS.map((s) => (
@@ -48,7 +49,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>{CONTEST.fullName} | {CONTEST.dateRangeLabel}</p>
+          <p>{CONTEST.fullName} | {CONTEST.dateRangeLabel} | Pořadatel: {ORGANIZER.name}, IČO {ORGANIZER.ico}</p>
           <p>
             Tato soutěž není nijak sponzorována, podporována ani spravována společností Instagram ani s ní není nijak spojena.
             Ukázkové fotografie byly pořízeny telefony OPPO Find X10 Series s fotoaparátem Hasselblad.

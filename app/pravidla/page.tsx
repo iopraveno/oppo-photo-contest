@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageMeta } from '@/lib/seo';
-import { CONTEST } from '@/lib/config';
+import Link from 'next/link';
+import { CONTEST, ORGANIZER } from '@/lib/config';
 import { clockTime, longDate } from '@/lib/contest';
 
 export const metadata: Metadata = pageMeta({
@@ -9,8 +10,6 @@ export const metadata: Metadata = pageMeta({
   path: '/pravidla',
 });
 
-// Replace every [placeholder] in square brackets before launch.
-const ORGANIZER = '[Název pořadatele, IČO, sídlo]';
 
 export default function RulesPage() {
   const h = CONTEST.instagramHandle;
@@ -21,7 +20,10 @@ export default function RulesPage() {
         <h1 className="section-title">Pravidla soutěže {CONTEST.fullName}</h1>
 
         <h2>1. Pořadatel</h2>
-        <p>Pořadatelem soutěže je {ORGANIZER} (dále jen „pořadatel“).</p>
+        <p>
+          Pořadatelem soutěže je {ORGANIZER.name}, IČO {ORGANIZER.ico}, se sídlem {ORGANIZER.address}, {ORGANIZER.register} (dále
+          jen „pořadatel“). Dotazy k soutěži posílej na <a href={`mailto:${ORGANIZER.email}`}>{ORGANIZER.email}</a>.
+        </p>
 
         <h2>2. Termín</h2>
         <p>
@@ -92,7 +94,7 @@ export default function RulesPage() {
         <h2>10. Osobní údaje</h2>
         <p>
           Pořadatel zpracovává e-mailové adresy hlasujících a instagramová jména soutěžících jen pro účely soutěže a po předání
-          výher je smaže. Souhlas se zasíláním novinek je dobrovolný a samostatný. Více v [odkaz na zásady zpracování osobních údajů].
+          výher je smaže. Podrobnosti najdeš v <Link href="/ochrana-osobnich-udaju">zásadách zpracování osobních údajů</Link>.
         </p>
 
         <h2>11. Instagram</h2>

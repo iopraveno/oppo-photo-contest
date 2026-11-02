@@ -37,8 +37,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
                 Hlasovat můžou jen lidé s ověřeným e-mailem, aby soutěž byla fér. Žádné heslo, pošleme ti jednorázový kód.
               </p>
               <p className="muted small" style={{ marginTop: 20 }}>
-                Soutěžící se registrovat nemusí, stačí jim příspěvek na Instagramu. E-mail použijeme jen pro hlasování a po skončení
-                soutěže ho smažeme. <Link href="/pravidla">Pravidla soutěže</Link>
+                Soutěžící se registrovat nemusí, stačí jim příspěvek na Instagramu. E-mail použijeme jen pro hlasování a po předání
+                výher ho smažeme. <Link href="/pravidla">Pravidla soutěže</Link> |{' '}
+                <Link href="/ochrana-osobnich-udaju">Ochrana osobních údajů</Link>
               </p>
             </>
           )}

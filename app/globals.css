@@ -306,6 +306,8 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 12px; l
 .prose p, .prose li { color: #2c2c2c; }
 .prose p + p { margin-top: 10px; }
 .prose ul, .prose ol { padding-left: 22px; }
+.prose ul + p, .prose ol + p, .prose p + ul, .prose p + ol { margin-top: 12px; }
+.prose li + li { margin-top: 6px; }
 .draft { border-left: 3px solid var(--amber); padding: 10px 16px; margin: 24px 0; color: #7a4b10; background: #fdf4e6; font-size: 15px; }
 
 /* Admin (kept simple) */

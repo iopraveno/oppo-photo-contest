@@ -55,6 +55,15 @@ export const CONTEST = {
 
 export type Theme = (typeof CONTEST.themes)[number];
 
+// Organizer of the contest and controller of personal data (from ARES).
+export const ORGANIZER = {
+  name: 'Jswin s.r.o.',
+  ico: '23452111',
+  address: 'Na Pankráci 1618/30, Nusle, 140 00 Praha 4',
+  register: 'zapsaná v obchodním rejstříku vedeném Městským soudem v Praze, oddíl C, vložka 427159',
+  email: 'ahoj@opposoutez.cz',
+} as const;
+
 export const SOCIALS = [
   { name: 'Instagram', url: 'https://www.instagram.com/oppo_cesko/' },
   { name: 'Facebook', url: 'https://www.facebook.com/oppocesko/' },
