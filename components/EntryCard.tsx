@@ -23,7 +23,7 @@ export default function EntryCard({
       <div className="entry-foot">
         <div style={{ minWidth: 0 }}>
           <Link href={`/foto/${entry.id}`} className="entry-author">@{entry.author_handle}</Link>
-          {entry.shot_on_oppo && <span className="badge">Shot on OPPO</span>}
+          {entry.shot_on_oppo && <span className="badge">#ShotOnOPPO</span>}
           <div className="entry-meta">
             <Link href={`/foto/${entry.id}`}>Sdílet fotku</Link>
           </div>

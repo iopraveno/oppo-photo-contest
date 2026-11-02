@@ -23,8 +23,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <section className="section">
       <div className="container" style={{ maxWidth: 640 }}>
-        <span className="label">Chyba</span>
-        <h1 className="h2" style={{ marginTop: 12 }}>Něco se pokazilo</h1>
+        <h1 className="h2">Něco se pokazilo</h1>
         <p className="lead" style={{ marginTop: 16 }}>
           Stránku se nepodařilo načíst. Zkus ji prosím obnovit.
         </p>

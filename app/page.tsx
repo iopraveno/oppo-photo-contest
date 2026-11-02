@@ -11,6 +11,7 @@ import PrizeTable from '@/components/PrizeTable';
 import Themes from '@/components/Themes';
 import CopyChip from '@/components/CopyChip';
 import Mosaic from '@/components/Mosaic';
+import LightToday from '@/components/LightToday';
 import { faqItems, homeJsonLd, pageMeta } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ export default async function HomePage() {
   const xpan = img('xpan.jpg');
 
   const faq = faqItems();
+  const now = Date.now();
 
   return (
     <>
@@ -60,17 +62,14 @@ export default async function HomePage() {
         {hero && <span className="hero-credit">Vyfoceno na OPPO Find X10 Series</span>}
       </section>
 
+      <LightToday initialNow={now} />
+
       {top.length > 0 && (
-        <section className="section paper" id="oblibene">
+        <section className="section" id="oblibene">
           <div className="container">
             <div className="section-head">
-              <div>
-                <span className="label">Galerie</span>
-                <h2 className="h2" style={{ marginTop: 12 }}>Nejoblíbenější fotky</h2>
-              </div>
-              <p className="lead">
-                Fotky, které komunitu zatím chytily nejvíc. Každé můžeš dát jeden hlas a podpořit kolik fotek chceš.
-              </p>
+              <h2 className="h2">Nejoblíbenější fotky</h2>
+              <p className="lead">Každé fotce můžeš dát jeden hlas a podpořit kolik fotek chceš.</p>
             </div>
             <div className="gallery">
               {top.map((e) => (
@@ -85,23 +84,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="section">
-        <div className="container statement">
-          <h2>Porota tu není. O vítězích rozhodne komunita.</h2>
-          <div>
-            <p className="lead">
-              Každý s ověřeným e-mailem může hlasovat a každý nový soutěžící odemyká lepší ceny pro všechny. Fotit můžeš na jakýkoli
-              telefon. Nejde o techniku, jde o světlo.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <section className="section paper" id="jak">
         <div className="container howto">
           <div className="howto-intro">
-            <span className="label label-accent">Jak se zapojit</span>
-            <h2 className="h2" style={{ marginTop: 12 }}>Stačí jeden příspěvek</h2>
+            <h2 className="h2">Stačí jeden příspěvek</h2>
             <p className="lead" style={{ marginTop: 16 }}>Žádné formuláře ani registrace. Fotku si najdeme sami a do 24 hodin ji přidáme do galerie.</p>
           </div>
           <ol className="howto-steps">
@@ -145,7 +131,7 @@ export default async function HomePage() {
             <h2 className="h2">Čtyři témata, jedno světlo</h2>
             <p className="lead">Soutěží se jen s fotkami na tato témata. Ukázky jsou z OPPO Find X10 Series, ať víš, kam mířit.</p>
           </div>
-          <Themes />
+          <Themes now={now} />
         </div>
       </section>
 
@@ -188,13 +174,11 @@ export default async function HomePage() {
           <PrizeTable entrants={stats.entrants} />
           <div className="prize-extra">
             <div>
-              <span className="label label-accent">Shot on OPPO</span>
               <h3>Poukaz 2 000 Kč do e-shopu OPPO</h3>
               <p>Pro nejvíc hlasovanou fotku s {CONTEST.oppoHashtag}. Pro majitele telefonů OPPO a OnePlus, na příslušenství, sluchátka nebo hodinky.</p>
             </div>
             <div>
-              <span className="label label-accent">Výherce Find X10</span>
-              <h3>Community Reviewer</h3>
+              <h3>Výherce Find X10 natočí recenzi</h3>
               <p>Do dvou týdnů od převzetí natočí video se zkušenostmi a nasdílí první fotky z telefonu. Komunita uvidí, jak fotí doopravdy.</p>
             </div>
           </div>
@@ -204,21 +188,12 @@ export default async function HomePage() {
       <section className="section community">
         {community && <img className="community-img" src={community} alt="" loading="lazy" />}
         <div className="community-shade" />
-        <div className="container">
-          <span className="label" style={{ color: '#cfcfcf' }}>Komunita</span>
-          <h2 className="h2" style={{ marginTop: 12 }}>Nehlasujeme za vás. Hlasujete vy.</h2>
+        <div className="container community-inner">
+          <h2 className="h2">Porota tu není. Hlasujete vy.</h2>
           <div className="community-grid">
             <div className="community-item">
-              <h3>Vy rozhodujete</h3>
-              <p>Žádná porota. Vyhrají fotky, které komunita vybere hlasováním.</p>
-            </div>
-            <div className="community-item">
-              <h3>Odemykáte společně</h3>
-              <p>Každý nový soutěžící posune všechny blíž k Find X10. Pozvi lidi, co fotí.</p>
-            </div>
-            <div className="community-item">
               <h3>Fotka týdne</h3>
-              <p>Každou neděli zveřejníme nejsilnější fotku týdne na našem Instagramu, s označením autora.</p>
+              <p>Každou neděli dáme nejsilnější fotku týdne na náš Instagram, s označením autora.</p>
             </div>
             <div className="community-item">
               <h3>OPPO Photo Club</h3>
@@ -245,12 +220,9 @@ export default async function HomePage() {
       <section className="section paper" id="faq">
         <div className="container">
           <div className="section-head">
-            <div>
-              <span className="label">Časté dotazy</span>
-              <h2 className="h2" style={{ marginTop: 12 }}>Než se zapojíš</h2>
-            </div>
+            <h2 className="h2">Časté dotazy</h2>
             <p className="lead">
-              Všechno podstatné na jednom místě. Podrobnosti najdeš v <Link href="/pravidla">pravidlech soutěže</Link>.
+              Podrobnosti najdeš v <Link href="/pravidla">pravidlech soutěže</Link>.
             </p>
           </div>
           <div className="faq">

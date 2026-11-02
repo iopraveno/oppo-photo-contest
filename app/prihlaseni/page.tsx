@@ -23,16 +23,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         <div>
           {forAdmin ? (
             <>
-              <span className="label">Administrace</span>
-              <h1 className="h2" style={{ marginTop: 12 }}>Přihlášení do administrace</h1>
+              <h1 className="h2">Přihlášení do administrace</h1>
               <p className="lead" style={{ marginTop: 20 }}>
                 Zadej e-mail, který má přístup do administrace. Pošleme ti jednorázový kód a po jeho opsání se otevře správa soutěže.
               </p>
             </>
           ) : (
             <>
-              <span className="label">Hlasování</span>
-              <h1 className="h2" style={{ marginTop: 12 }}>Přihlas se e-mailem a hlasuj</h1>
+              <h1 className="h2">Přihlas se e-mailem a hlasuj</h1>
               <p className="lead" style={{ marginTop: 20 }}>
                 Hlasovat můžou jen lidé s ověřeným e-mailem, aby soutěž byla fér. Žádné heslo, pošleme ti jednorázový kód.
               </p>

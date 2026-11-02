@@ -40,12 +40,11 @@ export default async function PhotoPage({ params }: { params: Params }) {
         <InstagramEmbed shortcode={entry.shortcode} author={entry.author_handle} fallbackHeight={760} />
         <div className="detail-side">
           <div>
-            <span className="label">{CONTEST.name}</span>
-            <h1 style={{ marginTop: 12 }}>
+            <h1>
               Fotka od{' '}
               <a href={instagramProfileUrl(entry.author_handle)} target="_blank" rel="noopener noreferrer">@{entry.author_handle}</a>
             </h1>
-            {entry.shot_on_oppo && <p style={{ marginTop: 12 }}><span className="badge" style={{ marginLeft: 0 }}>Shot on OPPO</span></p>}
+            {entry.shot_on_oppo && <p style={{ marginTop: 12 }}><span className="badge" style={{ marginLeft: 0 }}>#ShotOnOPPO</span></p>}
           </div>
           <div className="detail-actions">
             <VoteButton

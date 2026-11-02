@@ -16,7 +16,6 @@ export default function RulesPage() {
   return (
     <section className="section">
       <div className="container prose">
-        <p className="eyebrow">Pravidla</p>
         <h1 className="section-title">Pravidla soutěže {CONTEST.fullName}</h1>
 
         <h2>1. Pořadatel</h2>

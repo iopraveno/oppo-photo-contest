@@ -20,8 +20,7 @@ export default async function LeaderboardPage() {
       <div className="container">
         <div className="section-head">
           <div>
-            <span className="label">Žebříček</span>
-            <h1 className="h2" style={{ marginTop: 12 }}>Kdo zrovna vede</h1>
+            <h1 className="h2">Kdo zrovna vede</h1>
           </div>
           <p className="lead">
             {stats.photos} {plural(stats.photos, 'fotka', 'fotky', 'fotek')}, {stats.entrants}{' '}
@@ -37,10 +36,10 @@ export default async function LeaderboardPage() {
             {entries.map((e, i) => (
               <li key={e.id}>
                 <Link href={`/foto/${e.id}`} className="rank">
-                  <span className="rank-pos">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="rank-pos">{i + 1}.</span>
                   <span>
                     @{e.author_handle}
-                    {e.shot_on_oppo && <span className="badge">Shot on OPPO</span>}
+                    {e.shot_on_oppo && <span className="badge">#ShotOnOPPO</span>}
                   </span>
                   <span className="rank-votes">{e.votes} {plural(e.votes, 'hlas', 'hlasy', 'hlasů')}</span>
                 </Link>

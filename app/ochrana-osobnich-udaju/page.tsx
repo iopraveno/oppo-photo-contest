@@ -18,7 +18,6 @@ export default function PrivacyPage() {
   return (
     <section className="section">
       <div className="container prose">
-        <p className="eyebrow">Osobní údaje</p>
         <h1 className="section-title">Zásady zpracování osobních údajů</h1>
         <p>
           Tyto zásady vysvětlují, jak při fotosoutěži {CONTEST.fullName} zpracováváme osobní údaje lidí, kteří na tomto webu

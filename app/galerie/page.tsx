@@ -37,8 +37,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
       <div className="container">
         <div className="section-head">
           <div>
-            <span className="label">Galerie</span>
-            <h1 className="h2" style={{ marginTop: 12 }}>Fotky lovců světla</h1>
+            <h1 className="h2">Fotky lovců světla</h1>
           </div>
           <p className="lead">
             {stats.photos} {plural(stats.photos, 'fotka', 'fotky', 'fotek')} od {stats.entrants}{' '}

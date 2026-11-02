@@ -13,8 +13,7 @@ export default async function NoAccessPage() {
   return (
     <section className="section">
       <div className="container" style={{ maxWidth: 720 }}>
-        <span className="label">Administrace</span>
-        <h1 className="h2" style={{ marginTop: 12 }}>Tenhle e-mail nemá přístup do administrace</h1>
+        <h1 className="h2">Tenhle e-mail nemá přístup do administrace</h1>
         <p className="lead" style={{ marginTop: 20 }}>
           Jsi přihlášený jako <strong>{user.email}</strong>. Do administrace smí jen e-maily uvedené v proměnné ADMIN_EMAILS ve
           Vercelu (víc adres odděl čárkou). Po její úpravě je potřeba dát Redeploy.
