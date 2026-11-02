@@ -8,7 +8,7 @@ export const CONTEST = {
   instagramHandle: process.env.NEXT_PUBLIC_IG_HANDLE || 'oppo_cesko',
 
   // Times are Prague time (CET, UTC+1 in November).
-  start: '2026-11-04T00:00:00+01:00',
+  start: '2026-11-04T09:00:00+01:00',
   entriesEnd: '2026-11-24T23:59:59+01:00',
   votingEnd: '2026-11-26T23:59:59+01:00',
   winnersDate: '2026-11-27T12:00:00+01:00',

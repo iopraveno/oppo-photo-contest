@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CONTEST, instagramProfileUrl } from '@/lib/config';
-import { getPhase, longDate } from '@/lib/contest';
+import { clockTime, getPhase, longDate } from '@/lib/contest';
 import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
 import { img } from '@/lib/images';
@@ -14,7 +14,7 @@ import Mosaic from '@/components/Mosaic';
 export const dynamic = 'force-dynamic';
 
 const phaseText = {
-  before: `Startujeme ${longDate(CONTEST.start)}`,
+  before: `Startujeme ${longDate(CONTEST.start)} v ${clockTime(CONTEST.start)}`,
   entries: `Soutěž běží do ${longDate(CONTEST.entriesEnd)}`,
   voting: `Hlasování běží do ${longDate(CONTEST.votingEnd)}`,
   ended: `Vítěze vyhlásíme ${longDate(CONTEST.winnersDate)}`,
@@ -228,7 +228,7 @@ export default async function HomePage() {
             <h2 className="h2">Kdy se co děje</h2>
           </div>
           <div className="timeline">
-            <div className="timeline-item"><div className="date">{longDate(CONTEST.start)}</div><p>Start soutěže a hlasování</p></div>
+            <div className="timeline-item"><div className="date">{longDate(CONTEST.start)}</div><p>Start soutěže a hlasování v {clockTime(CONTEST.start)}</p></div>
             <div className="timeline-item"><div className="date">{longDate(CONTEST.entriesEnd)}</div><p>Poslední den pro nové fotky</p></div>
             <div className="timeline-item"><div className="date">{longDate(CONTEST.votingEnd)}</div><p>Konec hlasování</p></div>
             <div className="timeline-item"><div className="date">{longDate(CONTEST.winnersDate)}</div><p>Vyhlášení vítězů na Instagramu</p></div>

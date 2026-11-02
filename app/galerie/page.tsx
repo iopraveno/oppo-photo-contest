@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
-import { getPhase, plural, shortDate } from '@/lib/contest';
+import { clockTime, getPhase, plural, shortDate } from '@/lib/contest';
 import { CONTEST } from '@/lib/config';
 import EntryCard from '@/components/EntryCard';
 
@@ -45,7 +45,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
             {user ? (
               <p>
                 Hlasuješ jako <strong>{user.email}</strong>.
-                {phase === 'before' ? ` Hlasování startuje ${shortDate(CONTEST.start)}.` : ' Každé fotce můžeš dát jeden hlas.'}
+                {phase === 'before' ? ` Hlasování startuje ${shortDate(CONTEST.start)} v ${clockTime(CONTEST.start)}.` : ' Každé fotce můžeš dát jeden hlas.'}
               </p>
             ) : (
               <>

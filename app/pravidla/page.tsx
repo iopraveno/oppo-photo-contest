@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { CONTEST } from '@/lib/config';
-import { longDate } from '@/lib/contest';
+import { clockTime, longDate } from '@/lib/contest';
 
 export const metadata: Metadata = { title: 'Pravidla soutěže' };
 
@@ -20,7 +20,7 @@ export default function RulesPage() {
 
         <h2>2. Termín</h2>
         <p>
-          Soutěžní fotky je možné zveřejňovat od {longDate(CONTEST.start)} do {longDate(CONTEST.entriesEnd)} 2026 do 23:59.
+          Soutěžní fotky je možné zveřejňovat od {longDate(CONTEST.start)} 2026 od {clockTime(CONTEST.start)} do {longDate(CONTEST.entriesEnd)} 2026 do 23:59.
           Hlasování probíhá do {longDate(CONTEST.votingEnd)} 2026 do 23:59. Vítězové budou vyhlášeni{' '}
           {longDate(CONTEST.winnersDate)} 2026 na Instagramu @{h}.
         </p>

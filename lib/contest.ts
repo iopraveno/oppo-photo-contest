@@ -2,11 +2,8 @@ import { CONTEST } from './config';
 
 export type Phase = 'before' | 'entries' | 'voting' | 'ended';
 
-// TEMPORARY: voting opened before the start so the team can test it. Set back to false before launch.
-const EARLY_VOTING_TEST = true;
-
 export function getPhase(now = new Date()): Phase {
-  if (now < new Date(CONTEST.start)) return EARLY_VOTING_TEST ? 'entries' : 'before';
+  if (now < new Date(CONTEST.start)) return 'before';
   if (now <= new Date(CONTEST.entriesEnd)) return 'entries';
   if (now <= new Date(CONTEST.votingEnd)) return 'voting';
   return 'ended';
@@ -29,6 +26,13 @@ export function nextMilestone(entrants: number) {
 
 const dateFmt = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'numeric', timeZone: 'Europe/Prague' });
 const dateLongFmt = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'long', timeZone: 'Europe/Prague' });
+
+const timeFmt = new Intl.DateTimeFormat('cs-CZ', { hour: 'numeric', minute: '2-digit', timeZone: 'Europe/Prague' });
+
+/** Clock time in Prague, e.g. "9:00". */
+export function clockTime(iso: string) {
+  return timeFmt.format(new Date(iso));
+}
 
 export function shortDate(iso: string) {
   return dateFmt.format(new Date(iso));
