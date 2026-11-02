@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getEntry, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
-import { isVotingOpen } from '@/lib/contest';
+import { getPhase } from '@/lib/contest';
 import { CONTEST, SITE_URL, instagramProfileUrl } from '@/lib/config';
 import InstagramEmbed from '@/components/InstagramEmbed';
 import VoteButton from '@/components/VoteButton';
@@ -49,7 +49,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
               initialVotes={entry.votes}
               initialVoted={voted.has(entry.id)}
               loggedIn={Boolean(user)}
-              votingOpen={isVotingOpen()}
+              phase={getPhase()}
               size="large"
             />
             <ShareButton url={url} text={`Dej hlas mé fotce v soutěži ${CONTEST.name}!`} />

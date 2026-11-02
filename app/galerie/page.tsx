@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
-import { isVotingOpen, plural } from '@/lib/contest';
+import { getPhase, plural, shortDate } from '@/lib/contest';
 import { CONTEST } from '@/lib/config';
 import EntryCard from '@/components/EntryCard';
 
@@ -17,7 +17,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   const sort = params.razeni === 'hlasy' ? 'top' : 'new';
   const [entries, user, stats] = await Promise.all([getEntries({ filter, sort }), getUser(), getStats()]);
   const voted = await getVotedEntryIds(user?.id);
-  const votingOpen = isVotingOpen();
+  const phase = getPhase();
 
   const href = (f: string, s: string) => {
     const q = new URLSearchParams();
@@ -40,10 +40,20 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
             {plural(stats.entrants, 'autora', 'autorů', 'autorů')}. Každé fotce můžeš dát jeden hlas, fotek ale můžeš podpořit kolik chceš.
           </p>
         </div>
-        {!user && votingOpen && (
-          <p className="alert alert-info" style={{ marginBottom: 24 }}>
-            Pro hlasování se <Link href="/prihlaseni?next=/galerie">přihlas e-mailem</Link>. Zabere to minutu a žádné heslo nepotřebuješ.
-          </p>
+        {phase !== 'ended' && (
+          <div className="alert alert-info login-bar">
+            {user ? (
+              <p>
+                Hlasuješ jako <strong>{user.email}</strong>.
+                {phase === 'before' ? ` Hlasování startuje ${shortDate(CONTEST.start)}.` : ' Každé fotce můžeš dát jeden hlas.'}
+              </p>
+            ) : (
+              <>
+                <p>Hlasovat můžeš po přihlášení e-mailem. Žádné heslo, pošleme ti jednorázový kód.</p>
+                <Link href="/prihlaseni?next=/galerie" className="btn btn-black btn-small">Přihlásit se</Link>
+              </>
+            )}
+          </div>
         )}
         <div className="toolbar">
           <div className="filters">
@@ -60,7 +70,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
         ) : (
           <div className="gallery">
             {entries.map((e) => (
-              <EntryCard key={e.id} entry={e} voted={voted.has(e.id)} loggedIn={Boolean(user)} votingOpen={votingOpen} />
+              <EntryCard key={e.id} entry={e} voted={voted.has(e.id)} loggedIn={Boolean(user)} phase={phase} />
             ))}
           </div>
         )}

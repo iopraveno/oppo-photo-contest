@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CONTEST, instagramProfileUrl } from '@/lib/config';
-import { getPhase, isVotingOpen, longDate } from '@/lib/contest';
+import { getPhase, longDate } from '@/lib/contest';
 import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
 import { img } from '@/lib/images';
@@ -21,10 +21,9 @@ const phaseText = {
 };
 
 export default async function HomePage() {
-  const [stats, latest, user] = await Promise.all([getStats(), getEntries({ sort: 'new', limit: 6 }), getUser()]);
+  const [stats, top, user] = await Promise.all([getStats(), getEntries({ sort: 'top', limit: 6 }), getUser()]);
   const voted = await getVotedEntryIds(user?.id);
   const phase = getPhase();
-  const votingOpen = isVotingOpen();
   const handle = CONTEST.instagramHandle;
   const hero = img('hero.jpg');
   const community = img('community.jpg');
@@ -42,12 +41,43 @@ export default async function HomePage() {
           </p>
           <div className="hero-actions">
             <a href="#jak" className="btn btn-white">Jak se zapojit</a>
-            <Link href="/galerie" className="btn btn-outline">Hlasovat</Link>
+            {phase === 'ended' ? (
+              <Link href="/zebricek" className="btn btn-outline">Výsledky</Link>
+            ) : user ? (
+              <Link href="/galerie" className="btn btn-outline">Hlasovat</Link>
+            ) : (
+              <Link href="/prihlaseni?next=/galerie" className="btn btn-outline">Přihlásit se a hlasovat</Link>
+            )}
           </div>
           <p className="hero-meta">{phaseText[phase]}</p>
         </div>
         {hero && <span className="hero-credit">Vyfoceno na OPPO Find X10 Series</span>}
       </section>
+
+      {top.length > 0 && (
+        <section className="section paper" id="oblibene">
+          <div className="container">
+            <div className="section-head">
+              <div>
+                <span className="label">Galerie</span>
+                <h2 className="h2" style={{ marginTop: 12 }}>Nejoblíbenější fotky</h2>
+              </div>
+              <p className="lead">
+                Fotky, které komunitu zatím chytily nejvíc. Každé můžeš dát jeden hlas a podpořit kolik fotek chceš.
+              </p>
+            </div>
+            <div className="gallery">
+              {top.map((e) => (
+                <EntryCard key={e.id} entry={e} voted={voted.has(e.id)} loggedIn={Boolean(user)} phase={phase} returnTo="/#oblibene" />
+              ))}
+            </div>
+            <div className="gallery-more">
+              <Link href="/galerie" className="btn btn-black">Zobrazit celou galerii</Link>
+              <Link href="/zebricek" className="btn btn-outline">Žebříček</Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="container statement">
@@ -164,22 +194,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {latest.length > 0 && (
-        <section className="section paper">
-          <div className="container">
-            <div className="toolbar">
-              <h2 className="h2" style={{ maxWidth: 'none' }}>Nejnovější fotky</h2>
-              <Link href="/galerie" className="btn btn-black btn-small">Celá galerie</Link>
-            </div>
-            <div className="gallery">
-              {latest.map((e) => (
-                <EntryCard key={e.id} entry={e} voted={voted.has(e.id)} loggedIn={Boolean(user)} votingOpen={votingOpen} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <section className="section community">
         {community && <img className="community-img" src={community} alt="" loading="lazy" />}

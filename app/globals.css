@@ -235,7 +235,8 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 12px; l
 .entry { display: flex; flex-direction: column; }
 .embed-wrap { overflow: hidden; border-radius: 4px; background: var(--paper); }
 .embed { width: 100%; border: 0; display: block; background: var(--paper); }
-.entry-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-top: 14px; }
+.entry-foot { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; }
+.entry-foot .vote { display: flex; justify-content: space-between; }
 .entry-author { font-weight: 700; text-decoration: none; }
 .entry-author:hover { text-decoration: underline; }
 .entry-meta { font-size: 14px; color: var(--grey); }
@@ -244,6 +245,11 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 12px; l
 .vote-count { font-weight: 700; font-size: 18px; }
 .vote-count span { font-weight: 400; color: var(--grey); font-size: 14px; }
 .vote-btn.voted { background: var(--oppo); color: var(--white); }
+.vote-btn.voted[disabled] { opacity: 1; cursor: default; }
+.vote-btn[disabled]:not(.voted) { background: var(--paper); color: var(--grey); opacity: 1; cursor: default; }
+.login-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 24px; }
+.login-bar p { margin: 0; }
+.gallery-more { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 48px; }
 .empty { padding: 64px 0; color: var(--grey); text-align: center; border: 1px dashed var(--line); border-radius: 8px; }
 
 /* Photo detail */
@@ -330,3 +336,8 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 12px; l
 .footer-social a { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--line-dark); color: var(--white); transition: background 0.15s ease; }
 .footer-social a:hover { background: var(--line-dark); }
 .footer-bottom { padding-top: 24px; display: flex; flex-direction: column; gap: 8px; max-width: 70em; }
+
+/* Homepage: three top photos on phones keep the page short, the full set is one tap away */
+@media (max-width: 640px) {
+  #oblibene .gallery > .entry:nth-child(n + 4) { display: none; }
+}

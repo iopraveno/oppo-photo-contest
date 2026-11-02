@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Entry } from '@/lib/data';
+import type { Phase } from '@/lib/contest';
 import InstagramEmbed from './InstagramEmbed';
 import VoteButton from './VoteButton';
 
@@ -7,12 +8,14 @@ export default function EntryCard({
   entry,
   voted,
   loggedIn,
-  votingOpen,
+  phase,
+  returnTo,
 }: {
   entry: Entry;
   voted: boolean;
   loggedIn: boolean;
-  votingOpen: boolean;
+  phase: Phase;
+  returnTo?: string;
 }) {
   return (
     <article className="entry">
@@ -25,7 +28,7 @@ export default function EntryCard({
             <Link href={`/foto/${entry.id}`}>Sdílet fotku</Link>
           </div>
         </div>
-        <VoteButton entryId={entry.id} initialVotes={entry.votes} initialVoted={voted} loggedIn={loggedIn} votingOpen={votingOpen} />
+        <VoteButton entryId={entry.id} initialVotes={entry.votes} initialVoted={voted} loggedIn={loggedIn} phase={phase} returnTo={returnTo} />
       </div>
     </article>
   );
