@@ -2,8 +2,11 @@ import { CONTEST } from './config';
 
 export type Phase = 'before' | 'entries' | 'voting' | 'ended';
 
+// TEMPORARY: voting opened before the start so the team can test it. Set back to false before launch.
+const EARLY_VOTING_TEST = true;
+
 export function getPhase(now = new Date()): Phase {
-  if (now < new Date(CONTEST.start)) return 'before';
+  if (now < new Date(CONTEST.start)) return EARLY_VOTING_TEST ? 'entries' : 'before';
   if (now <= new Date(CONTEST.entriesEnd)) return 'entries';
   if (now <= new Date(CONTEST.votingEnd)) return 'voting';
   return 'ended';
