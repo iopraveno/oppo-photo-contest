@@ -62,7 +62,9 @@ export const SOCIALS = [
   { name: 'TikTok', url: 'https://www.tiktok.com/@oppocesko' },
 ] as const;
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+// Public address of the site. Falls back to the production domain Vercel assigns (custom domain if one is attached).
+const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '';
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || vercelProductionUrl || 'http://localhost:3000').replace(/\/$/, '');
 
 export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 

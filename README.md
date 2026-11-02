@@ -48,7 +48,7 @@ Zkopíruj `.env.example` do `.env.local` (lokálně) nebo je vlož do Vercelu (S
 | `NEXT_PUBLIC_SUPABASE_URL` | URL projektu Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | veřejný klíč (anon / publishable) |
 | `SUPABASE_SERVICE_ROLE_KEY` | tajný klíč (service_role / secret), nikdy ho nedávej do prohlížeče |
-| `NEXT_PUBLIC_SITE_URL` | adresa webu bez lomítka na konci |
+| `NEXT_PUBLIC_SITE_URL` | adresa webu bez lomítka na konci; na Vercelu nepovinné, bez ní se použije produkční doména projektu |
 | `NEXT_PUBLIC_IG_HANDLE` | instagramový účet OPPO CZ bez @ |
 | `ADMIN_EMAILS` | e-maily (oddělené čárkou), které smí do `/admin` |
 | `VOTE_SALT` | náhodný dlouhý řetězec pro anonymizaci IP adres |
