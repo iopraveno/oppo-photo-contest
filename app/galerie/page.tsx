@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import Link from 'next/link';
 import { getEntries, getStats, getVotedEntryIds } from '@/lib/data';
 import { getUser } from '@/lib/auth';
@@ -7,7 +8,11 @@ import { CONTEST } from '@/lib/config';
 import EntryCard from '@/components/EntryCard';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Galerie' };
+export const metadata: Metadata = pageMeta({
+  title: 'Galerie soutěžních fotek',
+  description: 'Fotky zimního světla ze soutěže OPPO Lovci světla. Prohlédni si je a dej hlas těm nejlepším, hlasovat může každý s ověřeným e-mailem.',
+  path: '/galerie',
+});
 
 type Search = Promise<{ filtr?: string; razeni?: string }>;
 

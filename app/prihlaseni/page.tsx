@@ -6,7 +6,7 @@ import { TURNSTILE_SITE_KEY } from '@/lib/config';
 import LoginForm from './LoginForm';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Přihlášení', robots: { index: false } };
+export const metadata: Metadata = { title: 'Přihlášení', robots: { index: false, follow: false } };
 
 type Search = Promise<{ next?: string }>;
 

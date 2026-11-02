@@ -1,8 +1,13 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { CONTEST } from '@/lib/config';
 import { clockTime, longDate } from '@/lib/contest';
 
-export const metadata: Metadata = { title: 'Pravidla soutěže' };
+export const metadata: Metadata = pageMeta({
+  title: 'Pravidla soutěže',
+  description: 'Pravidla fotosoutěže OPPO Lovci světla: termíny, témata, jak se zapojit, hlasování, výhry, licence k fotkám a osobní údaje.',
+  path: '/pravidla',
+});
 
 // Replace every [placeholder] in square brackets before launch.
 const ORGANIZER = '[Název pořadatele, IČO, sídlo]';

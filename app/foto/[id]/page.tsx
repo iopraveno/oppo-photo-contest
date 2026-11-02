@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getEntry, getVotedEntryIds } from '@/lib/data';
@@ -16,11 +17,14 @@ type Params = Promise<{ id: string }>;
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { id } = await params;
   const entry = await getEntry(id);
-  if (!entry) return { title: 'Fotka nenalezena' };
-  return {
+  if (!entry) return { title: 'Fotka nenalezena', robots: { index: false } };
+  // The share image comes from opengraph-image.tsx in this folder.
+  return pageMeta({
     title: `Fotka od @${entry.author_handle}`,
-    description: `Dej hlas fotce od @${entry.author_handle} v soutěži ${CONTEST.name}.`,
-  };
+    description: `Hlasuj pro fotku od @${entry.author_handle} ve fotosoutěži OPPO ${CONTEST.name}. Rozhoduje komunita, hraje se o OPPO Find X10.`,
+    path: `/foto/${entry.id}`,
+    image: false,
+  });
 }
 
 export default async function PhotoPage({ params }: { params: Params }) {

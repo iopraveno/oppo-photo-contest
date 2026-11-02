@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getUser, isAdminEmail } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Bez přístupu', robots: { index: false } };
+export const metadata: Metadata = { title: 'Bez přístupu', robots: { index: false, follow: false } };
 
 export default async function NoAccessPage() {
   const user = await getUser();

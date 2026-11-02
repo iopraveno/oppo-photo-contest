@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CONTEST, instagramProfileUrl } from '@/lib/config';
 import { clockTime, getPhase, longDate } from '@/lib/contest';
@@ -10,8 +11,10 @@ import PrizeTable from '@/components/PrizeTable';
 import Themes from '@/components/Themes';
 import CopyChip from '@/components/CopyChip';
 import Mosaic from '@/components/Mosaic';
+import { faqItems, homeJsonLd, pageMeta } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = pageMeta({ path: '/' });
 
 const phaseText = {
   before: `Startujeme ${longDate(CONTEST.start)} v ${clockTime(CONTEST.start)}`,
@@ -29,8 +32,11 @@ export default async function HomePage() {
   const community = img('community.jpg');
   const xpan = img('xpan.jpg');
 
+  const faq = faqItems();
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd()).replace(/</g, '\\u003c') }} />
       <section className="hero">
         {hero ? <img className="hero-img" src={hero} alt="" fetchPriority="high" /> : <div className="hero-fallback" />}
         <div className="hero-shade" />
@@ -232,6 +238,28 @@ export default async function HomePage() {
             <div className="timeline-item"><div className="date">{longDate(CONTEST.entriesEnd)}</div><p>Poslední den pro nové fotky</p></div>
             <div className="timeline-item"><div className="date">{longDate(CONTEST.votingEnd)}</div><p>Konec hlasování</p></div>
             <div className="timeline-item"><div className="date">{longDate(CONTEST.winnersDate)}</div><p>Vyhlášení vítězů na Instagramu</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section paper" id="faq">
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <span className="label">Časté dotazy</span>
+              <h2 className="h2" style={{ marginTop: 12 }}>Než se zapojíš</h2>
+            </div>
+            <p className="lead">
+              Všechno podstatné na jednom místě. Podrobnosti najdeš v <Link href="/pravidla">pravidlech soutěže</Link>.
+            </p>
+          </div>
+          <div className="faq">
+            {faq.map((f) => (
+              <details key={f.q} className="faq-item">
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>

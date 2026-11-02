@@ -7,7 +7,7 @@ import { CONTEST } from '@/lib/config';
 import { addEntry, deleteEntry, setHidden } from './actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Administrace', robots: { index: false } };
+export const metadata: Metadata = { title: 'Administrace', robots: { index: false, follow: false } };
 
 type Search = Promise<{ ok?: string; err?: string }>;
 

@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { deleteVote, deleteVotesByIp } from '../actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Kontrola hlasů', robots: { index: false } };
+export const metadata: Metadata = { title: 'Kontrola hlasů', robots: { index: false, follow: false } };
 
 type Search = Promise<{ fotka?: string; ok?: string; err?: string }>;
 type Vote = { id: number; entry_id: string; voter_email: string | null; ip_hash: string | null; created_at: string; entries: { author_handle: string } | null };

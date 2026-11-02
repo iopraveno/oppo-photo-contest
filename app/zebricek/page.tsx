@@ -1,11 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import Link from 'next/link';
 import { getEntries, getStats } from '@/lib/data';
 import { plural } from '@/lib/contest';
 import PrizeTable from '@/components/PrizeTable';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'Žebříček' };
+export const metadata: Metadata = pageMeta({
+  title: 'Žebříček',
+  description: 'Aktuální pořadí fotek podle hlasů komunity v soutěži OPPO Lovci světla. Hraje se o OPPO Find X10, OPPO Watch S a OPPO Enco Air5 Pro.',
+  path: '/zebricek',
+});
 
 export default async function LeaderboardPage() {
   const [entries, stats] = await Promise.all([getEntries({ sort: 'top', limit: 30 }), getStats()]);
