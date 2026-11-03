@@ -55,6 +55,43 @@ export const CONTEST = {
 
 export type Theme = (typeof CONTEST.themes)[number];
 
+// Photo walk with Martin Rak. Hidden page /photowalk, admin /admin/photowalk.
+export const PHOTOWALK = {
+  // Stored with every sign-up, so a future walk can reuse the same table.
+  slug: 'vysehrad-2026-11-14',
+  title: 'OPPO Photo Walk s Martinem Rakem',
+  // Prague time (CET, UTC+1 in November).
+  start: '2026-11-14T14:00:00+01:00',
+  end: '2026-11-14T17:00:00+01:00',
+  signupEnd: '2026-11-07T23:59:59+01:00',
+  capacity: 12,
+  place: 'Vista House',
+  address: 'Na Pankráci 30, Praha 4',
+  transport: 'kousek od metra C Vyšehrad',
+  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Vista+House%2C+Na+Pank%C3%A1ci+30%2C+Praha+4',
+  photographer: {
+    name: 'Martin Rak',
+    instagram: 'https://www.instagram.com/martinrakphoto/',
+    web: 'https://www.martinrak.cz/',
+  },
+  brands: ['OPPO', 'OnePlus'],
+  voucher: 'Voucher 500 Kč na e-shop OPPO při nákupu od 4 000 Kč',
+  program: [
+    { time: '14:00', title: 'Káva a tipy od Martina', text: 'Sraz ve Vista House. Martin na vlastních fotkách ukáže, jak telefonem fotit krajinu, architekturu, detaily i vzdálené motivy přes zoom.' },
+    { time: '14:30', title: 'Procházka po Vyšehradě', text: 'Zhruba 2,5 km v klidném tempu. Na každé zastávce se zaměříme na něco jiného.' },
+    { time: '16:30', title: 'Zpátky v teple: vaše fotky a otázky', text: 'Káva, občerstvení a to nejlepší, co jste nafotili. Martin snímky okomentuje a nejlepší ocení na místě. Končíme v 17:00.' },
+  ],
+  stops: [
+    { name: 'Vista House', theme: 'sraz, úvod a briefing' },
+    { name: 'Rotunda sv. Martina', theme: 'historická architektura a detaily' },
+    { name: 'Cihelná brána a Gorlice', theme: 'hradby, struktury a světlo' },
+    { name: 'Karlachovy sady', theme: 'příroda, podzim a portréty' },
+    { name: 'Bazilika sv. Petra a Pavla', theme: 'kompozice a perspektiva' },
+    { name: 'Vyhlídka Vyšehrad', theme: 'Vltava, Praha a foto challenge' },
+    { name: 'Parkem zpět', theme: 'volné focení cestou zpátky' },
+  ],
+} as const;
+
 // Organizer of the contest and controller of personal data (from ARES).
 export const ORGANIZER = {
   name: 'Jswin s.r.o.',

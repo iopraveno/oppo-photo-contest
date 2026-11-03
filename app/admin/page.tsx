@@ -33,7 +33,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
           <h1 className="section-title">Správa soutěže</h1>
           <p className="muted">
             Jednou až dvakrát denně projdi na Instagramu {CONTEST.hashtag} a označení @{CONTEST.instagramHandle} a nové příspěvky
-            přidej sem. <Link href="/admin/hlasy">Kontrola hlasů</Link> | <a href="/api/admin/export?typ=fotky">Export fotek (CSV)</a> |{' '}
+            přidej sem. <Link href="/admin/hlasy">Kontrola hlasů</Link> | <Link href="/admin/photowalk">Photo walk: přihlášky</Link> | <a href="/api/admin/export?typ=fotky">Export fotek (CSV)</a> |{' '}
             <a href="/api/admin/export?typ=hlasy">Export hlasů (CSV)</a>
           </p>
         </div>

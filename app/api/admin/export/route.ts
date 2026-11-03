@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getUser, isAdminEmail } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { PHOTOWALK } from '@/lib/config';
 
 function csv(rows: (string | number | boolean | null | undefined)[][]) {
   return rows
@@ -12,11 +13,22 @@ export async function GET(request: NextRequest) {
   const user = await getUser();
   if (!user || !isAdminEmail(user.email)) return new NextResponse('Forbidden', { status: 403 });
 
-  const type = request.nextUrl.searchParams.get('typ') === 'hlasy' ? 'hlasy' : 'fotky';
+  const typ = request.nextUrl.searchParams.get('typ');
+  const type = typ === 'hlasy' ? 'hlasy' : typ === 'photowalk' ? 'photowalk' : 'fotky';
   const supabase = createAdminClient();
   let body: string;
 
-  if (type === 'fotky') {
+  if (type === 'photowalk') {
+    const { data } = await supabase
+      .from('photowalk_signups')
+      .select('*')
+      .eq('event', PHOTOWALK.slug)
+      .order('created_at', { ascending: true });
+    body = csv([
+      ['jmeno', 'email', 'telefon', 'znacka', 'model', 'stav', 'prihlaseno', 'potvrzeno', 'email_odeslan'],
+      ...(data ?? []).map((s) => [s.name, s.email, s.phone, s.brand, s.model, s.status, s.created_at, s.confirmed_at, s.confirm_email_sent_at]),
+    ]);
+  } else if (type === 'fotky') {
     const { data } = await supabase.from('entry_scores').select('*').order('votes', { ascending: false });
     body = csv([
       ['autor', 'odkaz', 'shot_on_oppo', 'skryto', 'hlasy', 'pridano'],
@@ -45,7 +57,7 @@ export async function GET(request: NextRequest) {
   return new NextResponse('﻿' + body, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="lovci-svetla-${type}.csv"`,
+      'Content-Disposition': `attachment; filename="${type === 'photowalk' ? 'photowalk-prihlasky' : `lovci-svetla-${type}`}.csv"`,
     },
   });
 }

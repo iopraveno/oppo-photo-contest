@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { pageMeta } from '@/lib/seo';
-import { CONTEST, ORGANIZER, TURNSTILE_SITE_KEY } from '@/lib/config';
+import { CONTEST, ORGANIZER, PHOTOWALK, TURNSTILE_SITE_KEY } from '@/lib/config';
 import { longDate } from '@/lib/contest';
 
 export const metadata: Metadata = pageMeta({
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
         <ul>
           <li>Vercel Inc., USA: provoz (hosting) webu,</li>
           <li>Supabase, Inc., USA: databáze a přihlašování e-mailem,</li>
-          <li>INTERNET CZ, a.s. (FORPSI), IČO 26043319, Ktiš 2: odesílání e-mailů s přihlašovacím kódem,</li>
+          <li>INTERNET CZ, a.s. (FORPSI), IČO 26043319, Ktiš 2: odesílání e-mailů s přihlašovacím kódem a e-mailů k photo walku,</li>
           {TURNSTILE_SITE_KEY && <li>Cloudflare, Inc., USA: ochrana přihlášení před roboty (Turnstile),</li>}
           <li>přepravci a doručovací služby: doručení výher.</li>
         </ul>
@@ -131,12 +131,32 @@ export default function PrivacyPage() {
           hlasoval(a). Odpovíme bez zbytečného odkladu, nejpozději do jednoho měsíce.
         </p>
 
-        <h2>9. Změny</h2>
+        <h2 id="photowalk">9. Photo walk s Martinem Rakem</h2>
+        <p>
+          Na akci {PHOTOWALK.title} ({longDate(PHOTOWALK.start)} 2026) se přihlašuješ přes formulář na webu. Zpracováváme při tom:
+        </p>
+        <ul>
+          <li>jméno a příjmení, e-mail, telefon a značku a model telefonu, čas přihlášky a stav (čeká, potvrzeno, odmítnuto),</li>
+          <li>otisk IP adresy (stejně nevratný jako u hlasování), abychom zabránili hromadnému odesílání přihlášek.</li>
+        </ul>
+        <p>
+          Údaje použijeme jen k organizaci akce: potvrzení místa, pozvánce do kalendáře a zprávám o změnách programu nebo počasí.
+          Telefon je pro případ, že se v den akce potřebujeme rychle domluvit. Základem je tvoje přihláška na akci (čl. 6 odst. 1
+          písm. b) GDPR), u otisku IP adresy náš oprávněný zájem na ochraně formuláře (písm. f). Údaje zpracovávají stejní
+          zpracovatelé jako u soutěže (bod 4) a smažeme je nejpozději 30 dní po akci.
+        </p>
+        <p>
+          Během akce fotíme a natáčíme pro sociální sítě OPPO Česko, a to na základě našeho oprávněného zájmu na propagaci akce.
+          Pokud v záběru být nechceš, řekni to prosím na místě a do záběru tě nedáme. Proti zveřejnění můžeš kdykoli vznést námitku
+          na {mail}.
+        </p>
+
+        <h2>10. Změny</h2>
         <p>
           Tyto zásady můžeme upravit, například když se změní způsob provozu soutěže. Aktuální znění najdeš vždy na této stránce.
           Pravidla soutěže jsou na stránce <Link href="/pravidla">Pravidla soutěže</Link>.
         </p>
-        <p className="muted small">Poslední aktualizace: 2. listopadu 2026</p>
+        <p className="muted small">Poslední aktualizace: 3. listopadu 2026</p>
       </div>
     </section>
   );

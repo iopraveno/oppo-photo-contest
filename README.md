@@ -19,6 +19,8 @@ Web fotosoutěže pro Instagram. Soutěžící dají fotku na Instagram s **#OPP
 | `/pravidla` | **Návrh** pravidel, před spuštěním doplnit a nechat zkontrolovat |
 | `/admin` | Přidávání příspěvků, skrývání, mazání, exporty CSV |
 | `/admin/hlasy` | Kontrola hlasů: hlasy podle IP, skoky za hodinu, rušení hlasů |
+| `/photowalk` | Skrytá stránka photo walku s Martinem Rakem: přihláška, volná místa, program, mapa (bez odkazu v menu, mimo vyhledávače) |
+| `/admin/photowalk` | Přihlášky na photo walk: potvrzení místa, uvolnění, odmítnutí, export CSV |
 
 ## Spuštění krok za krokem
 
@@ -67,6 +69,34 @@ Zkopíruj `.env.example` do `.env.local` (lokálně) nebo je vlož do Vercelu (S
 - [ ] `app/pravidla/page.tsx`: doplň pořadatele a místa v [hranatých závorkách], nech zkontrolovat právníkem
 - [ ] přihlas se na webu svým admin e-mailem a otevři `/admin`
 - [ ] zkus přidat testovací příspěvek, zahlasovat a pak ho smazat
+
+## Photo walk (skrytá stránka /photowalk)
+
+Přihláška na photo walk s Martinem Rakem. Odkaz na `/photowalk` je jen v pozvánce e-mailem, web na stránku nikde neodkazuje a vyhledávače ji neindexují.
+
+Jak to funguje:
+
+1. Člověk vyplní jméno, e-mail, telefon a jaký má telefon (OPPO nebo OnePlus a model). Přijde mu e-mail, že je přihláška u nás.
+2. V `/admin/photowalk` přihlášku potvrdíš tlačítkem **Potvrdit místo**. Zaplní se jeden čtvereček (na webu i v adminu) a účastníkovi odejde potvrzovací e-mail s programem, mapou a pozvánkou do kalendáře (příloha `.ics` a odkaz do Google Kalendáře).
+3. Když je potvrzených 12 míst, další přihlášky se zapisují jako náhradníci. Místo jde kdykoli uvolnit (**Uvolnit místo**).
+
+Spuštění:
+
+1. **Supabase → SQL Editor**: vlož obsah `supabase/photowalk.sql` → Run (založí tabulku `photowalk_signups`).
+2. **Vercel → Settings → Environment Variables**: doplň SMTP pro odesílání e-mailů. Použij stejnou schránku, ze které Supabase posílá přihlašovací kódy (Supabase → Authentication → Emails → SMTP Settings):
+
+   | Proměnná | Význam |
+   | --- | --- |
+   | `SMTP_HOST` | např. `smtp.forpsi.com` |
+   | `SMTP_PORT` | `465` (SSL) nebo `587` |
+   | `SMTP_USER`, `SMTP_PASS` | přihlášení ke schránce |
+   | `MAIL_FROM` | odesílatel, např. `OPPO Česko <ahoj@opposoutez.cz>` (výchozí je `SMTP_USER`) |
+   | `MAIL_REPLY_TO` | nepovinné, kam chodí odpovědi (výchozí `ahoj@opposoutez.cz`) |
+   | `PHOTOWALK_NOTIFY_EMAILS` | nepovinné, e-maily (oddělené čárkou), kterým přijde upozornění na každou novou přihlášku |
+
+3. Redeploy. Admin ukáže červené upozornění, dokud SMTP chybí.
+
+Datum, kapacita, uzávěrka přihlášek, program a zastávky jsou v `lib/config.ts` (`PHOTOWALK`). Obrázky jsou v `public/img/photowalk/`, verze pro e-maily v `public/img/photowalk/email/` (používá je i pozvánka).
 
 ## Lokální vývoj
 
