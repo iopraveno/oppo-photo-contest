@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireAdmin } from '@/lib/auth';
+import { isAdminEmail, requirePhotowalkAdmin } from '@/lib/auth';
 import { PHOTOWALK } from '@/lib/config';
 import { listSignups, type Signup } from '@/lib/photowalk';
 import { isMailConfigured } from '@/lib/mail';
@@ -105,7 +105,8 @@ function Table({ title, rows, full, empty }: { title: string; rows: Signup[]; fu
 }
 
 export default async function PhotoWalkAdmin({ searchParams }: { searchParams: Search }) {
-  await requireAdmin('/admin/photowalk');
+  const user = await requirePhotowalkAdmin();
+  const fullAdmin = isAdminEmail(user.email);
   const { ok, err } = await searchParams;
   const all = await listSignups();
   const confirmed = all.filter((s) => s.status === 'confirmed');
@@ -121,7 +122,8 @@ export default async function PhotoWalkAdmin({ searchParams }: { searchParams: S
           <h1 className="section-title" style={{ marginBottom: 12 }}>Photo walk s Martinem Rakem</h1>
           <p className="muted">
             Přihlášky z <Link href="/photowalk">/photowalk</Link>. Po kliknutí na „Potvrdit místo“ se zaplní čtvereček na webu a
-            účastníkovi odejde potvrzovací e-mail s pozvánkou do kalendáře. <Link href="/admin">Zpět do administrace</Link> |{' '}
+            účastníkovi odejde potvrzovací e-mail s pozvánkou do kalendáře.{' '}
+            {fullAdmin && <><Link href="/admin">Zpět do administrace</Link> |{' '}</>}
             <a href="/api/admin/export?typ=photowalk">Export přihlášek (CSV)</a>
           </p>
         </div>

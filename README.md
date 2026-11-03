@@ -93,6 +93,7 @@ Spuštění:
    | `MAIL_FROM` | odesílatel, např. `OPPO Česko <ahoj@opposoutez.cz>` (výchozí je `SMTP_USER`) |
    | `MAIL_REPLY_TO` | nepovinné, kam chodí odpovědi (výchozí `ahoj@opposoutez.cz`) |
    | `PHOTOWALK_NOTIFY_EMAILS` | nepovinné, e-maily (oddělené čárkou), kterým přijde upozornění na každou novou přihlášku |
+   | `PHOTOWALK_ADMIN_EMAILS` | nepovinné, e-maily (oddělené čárkou), které smí jen do `/admin/photowalk`, ne do zbytku administrace. Kdo je v `ADMIN_EMAILS`, má přístup i sem |
 
 3. Redeploy. Admin ukáže červené upozornění, dokud SMTP chybí.
 

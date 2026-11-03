@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getUser, isAdminEmail } from '@/lib/auth';
+import { getUser, isAdminEmail, isPhotowalkAdminEmail } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PHOTOWALK } from '@/lib/config';
 
@@ -11,10 +11,10 @@ function csv(rows: (string | number | boolean | null | undefined)[][]) {
 
 export async function GET(request: NextRequest) {
   const user = await getUser();
-  if (!user || !isAdminEmail(user.email)) return new NextResponse('Forbidden', { status: 403 });
-
   const typ = request.nextUrl.searchParams.get('typ');
   const type = typ === 'hlasy' ? 'hlasy' : typ === 'photowalk' ? 'photowalk' : 'fotky';
+  const allowed = type === 'photowalk' ? isPhotowalkAdminEmail(user?.email) : isAdminEmail(user?.email);
+  if (!user || !allowed) return new NextResponse('Forbidden', { status: 403 });
   const supabase = createAdminClient();
   let body: string;
 

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/auth';
+import { requirePhotowalkAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PHOTOWALK } from '@/lib/config';
 import { getSeatCounts } from '@/lib/photowalk';
@@ -36,7 +36,7 @@ async function sendConfirmation(id: string, email: string) {
 }
 
 export async function confirmSignup(formData: FormData) {
-  await requireAdmin();
+  await requirePhotowalkAdmin();
   const signup = await load(String(formData.get('id') || ''));
   if (!signup) back({ err: 'Přihláška nenalezena.' });
   if (signup.status === 'confirmed') back({ err: `${signup.name} už potvrzené místo má.` });
@@ -59,7 +59,7 @@ export async function confirmSignup(formData: FormData) {
 }
 
 export async function resendConfirmation(formData: FormData) {
-  await requireAdmin();
+  await requirePhotowalkAdmin();
   const signup = await load(String(formData.get('id') || ''));
   if (!signup || signup.status !== 'confirmed') back({ err: 'E-mail jde poslat znovu jen potvrzeným.' });
   const res = await sendConfirmation(signup.id, signup.email);
@@ -69,7 +69,7 @@ export async function resendConfirmation(formData: FormData) {
 }
 
 export async function setSignupStatus(formData: FormData) {
-  await requireAdmin();
+  await requirePhotowalkAdmin();
   const signup = await load(String(formData.get('id') || ''));
   const status = String(formData.get('status') || '');
   if (!signup) back({ err: 'Přihláška nenalezena.' });
@@ -83,7 +83,7 @@ export async function setSignupStatus(formData: FormData) {
 }
 
 export async function deleteSignup(formData: FormData) {
-  await requireAdmin();
+  await requirePhotowalkAdmin();
   const signup = await load(String(formData.get('id') || ''));
   if (!signup) back({ err: 'Přihláška nenalezena.' });
   if (formData.get('confirm') !== 'ano') back({ err: 'Pro smazání napiš do políčka „ano“.' });

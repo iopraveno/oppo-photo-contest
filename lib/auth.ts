@@ -1,7 +1,7 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
 import { createSessionClient } from './supabase/server';
-import { adminEmails, isSupabaseConfigured } from './env';
+import { adminEmails, isSupabaseConfigured, photowalkAdminEmails } from './env';
 
 export type SessionUser = { id: string; email: string };
 
@@ -22,10 +22,21 @@ export function isAdminEmail(email: string | null | undefined) {
   return Boolean(email && adminEmails().includes(email.toLowerCase()));
 }
 
+export function isPhotowalkAdminEmail(email: string | null | undefined) {
+  return Boolean(email && (isAdminEmail(email) || photowalkAdminEmails().includes(email.toLowerCase())));
+}
+
 /** `next` is where the sign-in page sends the admin back to. */
 export async function requireAdmin(next = '/admin'): Promise<SessionUser> {
   const user = await getUser();
   if (!user) redirect(`/prihlaseni?next=${encodeURIComponent(next)}`);
   if (!isAdminEmail(user.email)) redirect('/bez-pristupu');
+  return user;
+}
+
+export async function requirePhotowalkAdmin(): Promise<SessionUser> {
+  const user = await getUser();
+  if (!user) redirect(`/prihlaseni?next=${encodeURIComponent('/admin/photowalk')}`);
+  if (!isPhotowalkAdminEmail(user.email)) redirect('/bez-pristupu');
   return user;
 }

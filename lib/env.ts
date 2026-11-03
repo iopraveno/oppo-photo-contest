@@ -12,9 +12,19 @@ export function isSupabaseConfigured() {
   return Boolean(supabaseUrl() && supabasePublicKey() && supabaseSecretKey());
 }
 
+// Accepts commas, semicolons, spaces or new lines between addresses (people paste lists in all of these forms).
+const emailList = (value: string | undefined) =>
+  (value || '')
+    .split(/[\s,;]+/)
+    .map((e) => e.trim().replace(/^["'<]+|[">']+$/g, '').toLowerCase())
+    .filter((e) => e.includes('@'));
+
+/** Full admins: the whole /admin. */
 export function adminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
+  return emailList(process.env.ADMIN_EMAILS);
+}
+
+/** Photo walk only: /admin/photowalk and its CSV export. Full admins have access too. */
+export function photowalkAdminEmails(): string[] {
+  return emailList(process.env.PHOTOWALK_ADMIN_EMAILS);
 }
