@@ -68,6 +68,8 @@ export const PHOTOWALK = {
   place: 'Vista House',
   address: 'Na Pankráci 30, Praha 4',
   transport: 'kousek od metra C Vyšehrad',
+  // For participants on the day: running late, can't find the place, can't come.
+  contactPhone: '+420 777 834 042',
   mapsUrl: 'https://www.google.com/maps/search/?api=1&query=Vista+House%2C+Na+Pank%C3%A1ci+30%2C+Praha+4',
   photographer: {
     name: 'Martin Rak',

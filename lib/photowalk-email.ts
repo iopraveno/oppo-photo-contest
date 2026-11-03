@@ -136,6 +136,7 @@ export function confirmedEmail(): Mail {
     ${details([
       ['Kdy', `${when()}<br><span style="color:#5F5A53;">sraz ve 14:00, ať stihneme kávu i úvod</span>`],
       ['Kde', where()],
+      ['Telefon', `<a href="tel:${PHOTOWALK.contactPhone.replace(/\s/g, '')}" style="color:#141414;font-weight:700;text-decoration:none;">${PHOTOWALK.contactPhone}</a><br><span style="color:#5F5A53;">když nestíháte, nemůžete nás najít nebo nakonec nedorazíte</span>`],
     ])}
     <div style="padding-top:22px;">
       ${button(googleCalendarUrl(), 'Přidat do Google Kalendáře')}
@@ -156,7 +157,7 @@ export function confirmedEmail(): Mail {
 
     ${muted('Během odpoledne bude kolegyně Jana fotit a natáčet pro sítě OPPO. Kdo nechce být v záběru, stačí jí to říct.', 24)}
     ${p('Těšíme se na vás,<br><strong>tým OPPO Česko</strong>', 24)}
-    ${muted('P.S. Kdybyste nakonec nemohli dorazit, odpovězte prosím na tento e-mail. Místo pak dostane někdo z náhradníků.', 20)}`;
+    ${muted(`P.S. Kdybyste nakonec nemohli dorazit, zavolejte nám prosím na ${PHOTOWALK.contactPhone} nebo odpovězte na tento e-mail. Místo pak dostane někdo z náhradníků.`, 20)}`;
   const text = [
     'Máte potvrzené místo',
     '',
@@ -166,6 +167,7 @@ export function confirmedEmail(): Mail {
     `Kdy: ${when()} (sraz ve 14:00)`,
     `Kde: ${PHOTOWALK.place}, ${PHOTOWALK.address} (${PHOTOWALK.transport})`,
     `Mapa: ${PHOTOWALK.mapsUrl}`,
+    `Telefon v den akce: ${PHOTOWALK.contactPhone} (když nestíháte, nemůžete nás najít nebo nakonec nedorazíte)`,
     `Do kalendáře: ${googleCalendarUrl()}`,
     '',
     'Program:',
@@ -173,7 +175,7 @@ export function confirmedEmail(): Mail {
     '',
     'Sbalte si: nabitý telefon, powerbanku, teplou bundu a pohodlné boty.',
     '',
-    'Kdybyste nakonec nemohli dorazit, odpovězte prosím na tento e-mail.',
+    `Kdybyste nakonec nemohli dorazit, zavolejte nám prosím na ${PHOTOWALK.contactPhone} nebo odpovězte na tento e-mail.`,
     '',
     'Tým OPPO Česko',
     PHOTOWALK_URL,
