@@ -22,9 +22,10 @@ export function isAdminEmail(email: string | null | undefined) {
   return Boolean(email && adminEmails().includes(email.toLowerCase()));
 }
 
-export async function requireAdmin(): Promise<SessionUser> {
+/** `next` is where the sign-in page sends the admin back to. */
+export async function requireAdmin(next = '/admin'): Promise<SessionUser> {
   const user = await getUser();
-  if (!user) redirect('/prihlaseni?next=/admin');
+  if (!user) redirect(`/prihlaseni?next=${encodeURIComponent(next)}`);
   if (!isAdminEmail(user.email)) redirect('/bez-pristupu');
   return user;
 }

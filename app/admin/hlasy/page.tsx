@@ -13,7 +13,7 @@ type Vote = { id: number; entry_id: string; voter_email: string | null; ip_hash:
 const timeFmt = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Prague' });
 
 export default async function VotesPage({ searchParams }: { searchParams: Search }) {
-  await requireAdmin();
+  await requireAdmin('/admin/hlasy');
   const { fotka, ok, err } = await searchParams;
   const supabase = createAdminClient();
 

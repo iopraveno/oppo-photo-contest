@@ -105,7 +105,7 @@ function Table({ title, rows, full, empty }: { title: string; rows: Signup[]; fu
 }
 
 export default async function PhotoWalkAdmin({ searchParams }: { searchParams: Search }) {
-  await requireAdmin();
+  await requireAdmin('/admin/photowalk');
   const { ok, err } = await searchParams;
   const all = await listSignups();
   const confirmed = all.filter((s) => s.status === 'confirmed');
