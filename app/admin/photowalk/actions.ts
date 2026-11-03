@@ -55,7 +55,7 @@ export async function confirmSignup(formData: FormData) {
   const res = await sendConfirmation(signup.id, signup.email);
   refresh();
   if (!res.ok) back({ err: `${signup.name} má potvrzené místo, ale e-mail se nepodařilo odeslat: ${res.error}` });
-  back({ ok: `${signup.name} má potvrzené místo, potvrzovací e-mail odešel.` });
+  back({ ok: `${signup.name} má potvrzené místo, potvrzovací e-mail odešel na ${signup.email}. Odpověď serveru: ${res.response}` });
 }
 
 export async function resendConfirmation(formData: FormData) {
@@ -65,7 +65,7 @@ export async function resendConfirmation(formData: FormData) {
   const res = await sendConfirmation(signup.id, signup.email);
   refresh();
   if (!res.ok) back({ err: `E-mail se nepodařilo odeslat: ${res.error}` });
-  back({ ok: `Potvrzení odešlo znovu na ${signup.email}.` });
+  back({ ok: `Potvrzení odešlo znovu na ${signup.email}. Odpověď serveru: ${res.response}` });
 }
 
 export async function setSignupStatus(formData: FormData) {
@@ -98,5 +98,5 @@ export async function sendTestEmail() {
   const mail = confirmedEmail();
   const res = await sendMail({ ...mail, subject: `[TEST] ${mail.subject}`, to: user.email });
   if (!res.ok) back({ err: `Testovací e-mail se nepodařilo odeslat: ${res.error}` });
-  back({ ok: `Testovací e-mail odešel na ${user.email}. Kdyby do pár minut nedorazil, mrkni do spamu.` });
+  back({ ok: `Testovací e-mail odešel na ${user.email}. Odpověď serveru: ${res.response}. Kdyby do pár minut nedorazil, mrkni do spamu.` });
 }

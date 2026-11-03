@@ -79,11 +79,11 @@ export function explainMailError(error: string) {
 }
 
 /** Sends one e-mail. Returns an error message instead of throwing, so a failed e-mail never breaks a sign-up. */
-export async function sendMail(mail: Mail): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function sendMail(mail: Mail): Promise<{ ok: true; response: string } | { ok: false; error: string }> {
   if (!isMailConfigured()) return { ok: false, error: 'SMTP není nastavené (SMTP_HOST, SMTP_USER, SMTP_PASS).' };
   const c = smtp();
   try {
-    await getTransporter().sendMail({
+    const info = await getTransporter().sendMail({
       from: c.from || `OPPO Česko <${c.user}>`,
       replyTo: c.replyTo,
       to: mail.to,
@@ -92,7 +92,8 @@ export async function sendMail(mail: Mail): Promise<{ ok: true } | { ok: false; 
       text: mail.text,
       attachments: mail.attachments,
     });
-    return { ok: true };
+    // e.g. "250 2.0.0 Ok: queued as 4Xyz": the SMTP server accepted the message for delivery.
+    return { ok: true, response: String(info.response || '').slice(0, 160) };
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
     console.error('sendMail failed:', error);
