@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { isAdminEmail, requirePhotowalkAdmin } from '@/lib/auth';
 import { PHOTOWALK } from '@/lib/config';
 import { listSignups, type Signup } from '@/lib/photowalk';
-import { isMailConfigured } from '@/lib/mail';
+import { isMailConfigured, mailSetupSummary } from '@/lib/mail';
 import Seats from '@/components/Seats';
-import { confirmSignup, deleteSignup, resendConfirmation, setSignupStatus } from './actions';
+import { confirmSignup, deleteSignup, resendConfirmation, sendTestEmail, setSignupStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Photo walk: přihlášky', robots: { index: false, follow: false } };
@@ -107,6 +107,7 @@ function Table({ title, rows, full, empty }: { title: string; rows: Signup[]; fu
 export default async function PhotoWalkAdmin({ searchParams }: { searchParams: Search }) {
   const user = await requirePhotowalkAdmin();
   const fullAdmin = isAdminEmail(user.email);
+  const mail = mailSetupSummary();
   const { ok, err } = await searchParams;
   const all = await listSignups();
   const confirmed = all.filter((s) => s.status === 'confirmed');
@@ -135,6 +136,16 @@ export default async function PhotoWalkAdmin({ searchParams }: { searchParams: S
             E-maily se zatím neposílají: na Vercelu chybí SMTP_HOST, SMTP_USER a SMTP_PASS (viz README, sekce Photo walk).
           </p>
         )}
+
+        <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
+          <p className="small" style={{ margin: 0 }}>
+            <strong>E-maily:</strong> {mail.host}:{mail.port} | přihlášení <code>{mail.user}</code> | heslo{' '}
+            {mail.passLength ? 'nastavené' : <strong>chybí</strong>} | odesílatel <code>{mail.from}</code>
+          </p>
+          <form action={sendTestEmail}>
+            <button className="btn btn-ghost btn-small" type="submit">Poslat testovací e-mail na {user.email}</button>
+          </form>
+        </div>
 
         <div className="card pw-admin-seats">
           <Seats filled={confirmed.length} total={PHOTOWALK.capacity} size="lg" />

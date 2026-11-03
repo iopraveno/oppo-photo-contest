@@ -91,3 +91,12 @@ export async function deleteSignup(formData: FormData) {
   refresh();
   back({ ok: `Přihláška od ${signup.name} je smazaná.` });
 }
+
+/** Sends the real confirmation e-mail to the signed-in admin, to check the SMTP setup. */
+export async function sendTestEmail() {
+  const user = await requirePhotowalkAdmin();
+  const mail = confirmedEmail();
+  const res = await sendMail({ ...mail, subject: `[TEST] ${mail.subject}`, to: user.email });
+  if (!res.ok) back({ err: `Testovací e-mail se nepodařilo odeslat: ${res.error}` });
+  back({ ok: `Testovací e-mail odešel na ${user.email}. Kdyby do pár minut nedorazil, mrkni do spamu.` });
+}
