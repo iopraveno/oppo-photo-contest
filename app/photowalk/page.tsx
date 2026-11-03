@@ -34,7 +34,7 @@ export default async function PhotoWalkPage() {
         <div className="pw-hero-shade" />
         <div className="container pw-hero-inner">
           <div className="pw-hero-text">
-            <p className="pw-tag"><span className="pw-dot" aria-hidden /> OPPO Photo Walk, Praha</p>
+            <p className="pw-free"><strong>Účast zdarma</strong> + voucher 500 Kč</p>
             <h1>Fotíme Vyšehrad<br /> s&nbsp;Martinem Rakem</h1>
             <p className="lead">
               Sobotní odpoledne v terénu s krajinářem oceněným v EISA Maestro i Sony World Photography Awards. Bez stativu a batohu

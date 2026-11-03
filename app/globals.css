@@ -386,6 +386,7 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 .pw-hero .lead { color: #e4e4e4; }
 .pw-tag { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; color: rgba(255, 255, 255, 0.85); }
 .pw-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--pw-orange); }
+.pw-free { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 999px; background: var(--pw-orange); color: #141414; font-size: 16px; white-space: nowrap; }
 
 /* Calendar tile */
 .pw-cal { background: var(--white); color: var(--ink); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); max-width: 300px; }
