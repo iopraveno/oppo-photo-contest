@@ -30,6 +30,7 @@ export default async function HomePage() {
   const phase = getPhase();
   const handle = CONTEST.instagramHandle;
   const hero = img('hero.jpg');
+  const heroSmall = img('hero-1280.jpg');
   const community = img('community.jpg');
   const xpan = img('xpan.jpg');
 
@@ -40,7 +41,18 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd()).replace(/</g, '\\u003c') }} />
       <section className="hero">
-        {hero ? <img className="hero-img" src={hero} alt="" fetchPriority="high" /> : <div className="hero-fallback" />}
+        {hero ? (
+          <img
+            className="hero-img"
+            src={hero}
+            srcSet={heroSmall ? `${heroSmall} 1280w, ${hero} 2880w` : undefined}
+            sizes="100vw"
+            alt=""
+            fetchPriority="high"
+          />
+        ) : (
+          <div className="hero-fallback" />
+        )}
         <div className="hero-shade" />
         <div className="container hero-content">
           <h1>Lovci světla</h1>

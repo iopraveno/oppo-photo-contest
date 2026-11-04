@@ -2,7 +2,7 @@
 On socials nothing is clickable, so the CTA row carries the real mechanic: hashtag pill + handle to tag."""
 from PIL import Image, ImageDraw
 import os
-from make import crop_to, scrim, font, cap_top_offset, EYEBROW, TITLE, TAGLINE, BTN, REF_W
+from make import crop_to, scrim, font, cap_top_offset, enhance, save, EYEBROW, TITLE, TAGLINE, BTN, REF_W
 
 OUT = 'out-social'
 os.makedirs(OUT, exist_ok=True)
@@ -34,12 +34,12 @@ def draw(d, w, h, s, mx, top_y, cta_bottom, credit_y, lines):
 
 def render(name, size, s, top_frac, cta_frac, credit_frac, lines, scr):
     w, h = size
-    im = crop_to(w / h, 0.3).resize(size, Image.LANCZOS)
+    im = enhance(crop_to(w / h, 0.3), size)
     im = scrim(im, **scr)
-    im.save(f'{OUT}/{name}-bez-textu.jpg', quality=92, optimize=True, progressive=True)
+    save(im, f'{OUT}/{name}-bez-textu.jpg')
     d = ImageDraw.Draw(im)
     draw(d, w, h, s, int(w * 0.08), int(h * top_frac), int(h * cta_frac), int(h * credit_frac), lines)
-    im.save(f'{OUT}/{name}-s-textem.jpg', quality=92, optimize=True, progressive=True)
+    save(im, f'{OUT}/{name}-s-textem.jpg')
     print(name, size)
 
 

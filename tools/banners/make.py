@@ -1,7 +1,19 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-SRC = Image.open('src.jpg').convert('RGB')
+import io
+from PIL import ImageCms
+
+# The source is Display P3. Convert to sRGB once and tag every output as sRGB,
+# otherwise browsers and CMSs read the P3 numbers as sRGB and the image looks flat and soft.
+_raw = Image.open('src.jpg')
+_SRGB = ImageCms.createProfile('sRGB')
+SRGB_ICC = ImageCms.ImageCmsProfile(_SRGB).tobytes()
+if _raw.info.get('icc_profile'):
+    SRC = ImageCms.profileToProfile(_raw, ImageCms.ImageCmsProfile(io.BytesIO(_raw.info['icc_profile'])), _SRGB,
+                                    renderingIntent=ImageCms.Intent.PERCEPTUAL, outputMode='RGB')
+else:
+    SRC = _raw.convert('RGB')
 W0, H0 = SRC.size
 FONT = '/home/claude/fontpkg/x/package/OPPO Sans 4.0.ttf'
 OUT = 'out'
@@ -31,6 +43,23 @@ def crop_to(ratio, sun_y_frac, max_bottom=0.88):
         sy = int(H0 * SUN[1]); y = int(sy - h * sun_y_frac)
         y = max(0, min(y, int(H0 * max_bottom) - h)); x = 0
     return SRC.crop((x, y, x + w, y + h))
+
+def enhance(crop, size):
+    """Crisp output: local contrast at full resolution (lifts the haze), high-quality downscale, then output sharpening.
+    Threshold keeps the smooth sky free of amplified noise."""
+    from PIL import ImageFilter
+    w = crop.width
+    crop = crop.filter(ImageFilter.UnsharpMask(radius=max(8, int(w * 0.006)), percent=22, threshold=0))
+    im = crop.resize(size, Image.LANCZOS)
+    scale = size[0] / 3574
+    im = im.filter(ImageFilter.UnsharpMask(radius=max(0.6, 1.0 * scale ** 0.5), percent=95, threshold=3))
+    return im
+
+
+def save(im, path):
+    # 4:4:4 chroma keeps orange and white edges sharp; q95 avoids visible JPEG softening.
+    im.save(path, quality=95, subsampling=0, optimize=True, progressive=True, icc_profile=SRGB_ICC)
+
 
 def scrim(im, left=0.0, bottom=0.0):
     w, h = im.size
@@ -85,12 +114,12 @@ def draw_text_block(d, w, h, s, mx, top_y, bottom_y, lines, credit_right=True):
 
 def render(name, size, sun_y, s, mx_frac, top_frac, bottom_frac, lines, scr, credit_right=True):
     w, h = size
-    im = crop_to(w / h, sun_y).resize(size, Image.LANCZOS)
+    im = enhance(crop_to(w / h, sun_y), size)
     im = scrim(im, **scr)
-    im.save(f'{OUT}/{name}-bez-textu.jpg', quality=92, optimize=True, progressive=True)
+    save(im, f'{OUT}/{name}-bez-textu.jpg')
     d = ImageDraw.Draw(im)
     draw_text_block(d, w, h, s, int(w * mx_frac), int(h * top_frac), int(h * bottom_frac), lines, credit_right)
-    im.save(f'{OUT}/{name}-s-textem.jpg', quality=92, optimize=True, progressive=True)
+    save(im, f'{OUT}/{name}-s-textem.jpg')
     print(name, size)
 
 if __name__ == '__main__':

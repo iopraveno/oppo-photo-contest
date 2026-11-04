@@ -1,7 +1,7 @@
 """Share images (1200x630) and favicons for the contest website."""
 from PIL import Image, ImageDraw
 import os
-from make import crop_to, scrim, font, cap_top_offset
+from make import crop_to, scrim, font, cap_top_offset, enhance, save
 
 OUT = 'out-web'
 os.makedirs(OUT, exist_ok=True)
@@ -17,7 +17,7 @@ def logo(width):
 
 
 def base(strength):
-    im = crop_to(W / H, 0.36).resize((W, H), Image.LANCZOS)
+    im = enhance(crop_to(W / H, 0.36), (W, H))
     im = scrim(im, left=strength, bottom=0.25)
     lg = logo(150)
     im.paste(lg, (64, 58), lg)
@@ -30,7 +30,7 @@ d = ImageDraw.Draw(bg)
 f_cr = font(20, 400)
 cr = 'Vyfoceno na OPPO Find X10 Series'
 d.text((W - 64 - d.textlength(cr, font=f_cr), H - 56 - cap_top_offset(f_cr)), cr, font=f_cr, fill=WHITE)
-bg.save(f'{OUT}/og-bg.jpg', quality=88, optimize=True, progressive=True)
+save(bg, f'{OUT}/og-bg.jpg')
 
 # Default share image for the whole site.
 im = base(0.7)
@@ -53,7 +53,7 @@ box = (x, H - 64 - ph, x + tw + pad * 2, H - 64)
 d.rounded_rectangle(box, radius=ph / 2, fill=WHITE)
 d.text((x + pad, box[1] + (ph - f_url.size) / 2 - cap_top_offset(f_url) / 2 + 2), label, font=f_url, fill=(11, 11, 11))
 d.text((W - 64 - d.textlength(cr, font=f_cr), H - 64 - ph / 2 - 10), cr, font=f_cr, fill=WHITE)
-im.save(f'{OUT}/og.jpg', quality=88, optimize=True, progressive=True)
+save(im, f'{OUT}/og.jpg')
 
 # Favicons: white OPPO wordmark on black, rounded square for app icons.
 def icon(size, rounded):
