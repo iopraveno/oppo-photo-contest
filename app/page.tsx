@@ -114,9 +114,12 @@ export default async function HomePage() {
               <span className="howto-num">2</span>
               <div>
                 <h3>Dej ji na Instagram</h3>
-                <p>Do popisku přidej hashtag a označ nás. Fotíš na OPPO nebo OnePlus? Přidej i #ShotOnOPPO a hraješ o cenu navíc.</p>
+                <p>
+                  Do popisku napiš <strong>{CONTEST.hashtag}</strong> a označ <strong>@{handle}</strong>. Fotíš na OPPO nebo OnePlus? Přidej
+                  i <strong>{CONTEST.oppoHashtag}</strong> a hraješ o cenu navíc.
+                </p>
                 <div className="chips">
-                  <CopyChip text={`${CONTEST.hashtag} @${handle}`} label="Zkopírovat popisek" />
+                  <CopyChip text={`${CONTEST.hashtag} @${handle}`} />
                   <CopyChip text={CONTEST.oppoHashtag} />
                 </div>
               </div>
