@@ -417,10 +417,11 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 .pw-form-title { font-size: 26px; margin-bottom: 4px; }
 .pw-brand { border: 0; padding: 0; margin: 0; }
 .pw-brand legend { font-weight: 700; font-size: 15px; margin-bottom: 8px; padding: 0; }
-.pw-brand-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pw-brand-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 360px) { .pw-brand-options { grid-template-columns: 1fr 1fr; } }
 .pw-brand-option { position: relative; cursor: pointer; }
 .pw-brand-option input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
-.pw-brand-option span { display: flex; align-items: center; justify-content: center; min-height: 52px; border: 1.5px solid var(--line); border-radius: 10px; font-weight: 700; }
+.pw-brand-option span { display: flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 8px; text-align: center; line-height: 1.15; border: 1.5px solid var(--line); border-radius: 10px; font-weight: 700; }
 .pw-brand-option input:checked + span { border-color: var(--ink); background: var(--ink); color: var(--white); }
 .pw-brand-option input:focus-visible + span { outline: 2px solid var(--pw-orange); outline-offset: 2px; }
 .pw-consent { align-items: flex-start; color: var(--ink-2); line-height: 1.45; }

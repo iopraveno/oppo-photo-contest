@@ -1,6 +1,6 @@
 import 'server-only';
 import { ORGANIZER, PHOTOWALK, SITE_URL } from './config';
-import { buildIcs, eventDayLabel, eventTimeLabel, googleCalendarUrl, PHOTOWALK_URL, type SeatCounts, type Signup } from './photowalk';
+import { buildIcs, eventDayLabel, eventTimeLabel, googleCalendarUrl, phoneLabel, PHOTOWALK_URL, type SeatCounts, type Signup } from './photowalk';
 import type { Mail } from './mail';
 
 // Table-based HTML so it renders the same in Gmail, Outlook and Apple Mail. Same look as the invitation e-mail.
@@ -85,7 +85,7 @@ export function receivedEmail(s: Pick<Signup, 'brand' | 'model'>, waitlist: bool
     ${details([
       ['Kdy', when()],
       ['Kde', where()],
-      ['Telefon', `${esc(s.brand)} ${esc(s.model)}`],
+      ['Telefon', esc(phoneLabel(s.brand, s.model))],
     ])}
     ${muted('Kdybyste nakonec nemohli dorazit, stačí odpovědět na tento e-mail. Místo pak dostane někdo další.', 24)}
     ${p('Těšíme se,<br><strong>tým OPPO Česko</strong>', 24)}`;
@@ -97,7 +97,7 @@ export function receivedEmail(s: Pick<Signup, 'brand' | 'model'>, waitlist: bool
     '',
     `Kdy: ${when()}`,
     `Kde: ${PHOTOWALK.place}, ${PHOTOWALK.address} (${PHOTOWALK.transport})`,
-    `Telefon: ${s.brand} ${s.model}`,
+    `Telefon: ${phoneLabel(s.brand, s.model)}`,
     '',
     'Kdybyste nakonec nemohli dorazit, stačí odpovědět na tento e-mail.',
     '',
@@ -114,7 +114,7 @@ export function receivedEmail(s: Pick<Signup, 'brand' | 'model'>, waitlist: bool
 
 /** When an admin confirms the place. Carries the calendar file. */
 export function confirmedEmail(): Mail {
-  const bring = ['Nabitý telefon OPPO nebo OnePlus', 'Powerbanku', 'Teplou bundu a pohodlné boty'];
+  const bring = ['Nabitý telefon', 'Powerbanku', 'Teplou bundu a pohodlné boty'];
   const list = bring
     .map(
       (b) => `<tr><td width="26" valign="top" style="width:26px;padding:7px 0 0 0;"><table ${T}><tr><td width="10" height="10" style="width:10px;height:10px;border:2px solid #F07C2E;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>
@@ -195,7 +195,7 @@ export function adminNotifyEmail(s: Pick<Signup, 'name' | 'email' | 'phone' | 'b
     `Jméno: ${s.name}`,
     `E-mail: ${s.email}`,
     `Telefon: ${s.phone}`,
-    `Model: ${s.brand} ${s.model}`,
+    `Telefon: ${phoneLabel(s.brand, s.model)}${s.brand === PHOTOWALK.otherBrand ? ' (jiná značka)' : ''}`,
     '',
     `Potvrzeno ${counts.confirmed} z ${PHOTOWALK.capacity}, čeká ${counts.pending}.`,
     `Potvrdit: ${SITE_URL}/admin/photowalk`,

@@ -77,18 +77,18 @@ export default async function PhotoWalkPage() {
             <dl className="pw-facts">
               <div><dt>Kdy</dt><dd>{eventDayLabel()}, {eventTimeLabel()}</dd></div>
               <div><dt>Sraz</dt><dd>{PHOTOWALK.place}, {PHOTOWALK.address}, <a href={PHOTOWALK.mapsUrl} target="_blank" rel="noopener noreferrer">{PHOTOWALK.transport}</a></dd></div>
-              <div><dt>Pro koho</dt><dd>Majitelé telefonů OPPO a OnePlus</dd></div>
+              <div><dt>Pro koho</dt><dd>Hlavně majitelé OPPO a OnePlus, přijít ale může každý</dd></div>
               <div><dt>Cena</dt><dd>Zdarma, každý navíc dostane voucher 500 Kč</dd></div>
             </dl>
           </div>
           <div className="pw-form-card">
             {open ? (
-              <SignupForm brands={PHOTOWALK.brands} turnstileKey={TURNSTILE_SITE_KEY} waitlist={full} deadline={deadline} />
+              <SignupForm brands={PHOTOWALK.brands} otherBrand={PHOTOWALK.otherBrand} turnstileKey={TURNSTILE_SITE_KEY} waitlist={full} deadline={deadline} />
             ) : (
               <div className="pw-done">
                 <h3>Přihlašování skončilo</h3>
                 <p>
-                  Přihlášky jsme brali do {deadline}. Kdybyste se chtěli přidat na poslední chvíli, napište nám na{' '}
+                  Přihlášky jsme brali do {deadline} Kdybyste se chtěli přidat na poslední chvíli, napište nám na{' '}
                   <a href={`mailto:${ORGANIZER.email}`}>{ORGANIZER.email}</a>.
                 </p>
               </div>
@@ -168,7 +168,7 @@ export default async function PhotoWalkPage() {
             <div className="pw-before-card">
               <h3>Sbalte si</h3>
               <ul className="pw-check">
-                <li>Nabitý telefon OPPO nebo OnePlus</li>
+                <li>Nabitý telefon</li>
                 <li>Powerbanku</li>
                 <li>Teplou bundu a pohodlné boty</li>
               </ul>

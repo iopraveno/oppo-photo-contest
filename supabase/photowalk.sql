@@ -9,7 +9,7 @@ create table if not exists public.photowalk_signups (
   name                  text not null,
   email                 text not null,                 -- stored lower-case
   phone                 text not null,
-  brand                 text not null check (brand in ('OPPO', 'OnePlus')),
+  brand                 text not null check (brand in ('OPPO', 'OnePlus', 'Jiná značka')),
   model                 text not null,
   status                text not null default 'pending' check (status in ('pending', 'confirmed', 'declined')),
   ip_hash               text,

@@ -1,14 +1,18 @@
 'use client';
 
-import { startTransition, useActionState } from 'react';
+import { startTransition, useActionState, useState } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import { signUp, type SignupState } from './actions';
 
-type Props = { brands: readonly string[]; turnstileKey: string; waitlist: boolean; deadline: string };
+type Props = { brands: readonly string[]; otherBrand: string; turnstileKey: string; waitlist: boolean; deadline: string };
 
-export default function SignupForm({ brands, turnstileKey, waitlist, deadline }: Props) {
+const MODEL_HINT: Record<string, string> = { OPPO: 'např. Find X10 Pro Max', OnePlus: 'např. OnePlus 13' };
+
+export default function SignupForm({ brands, otherBrand, turnstileKey, waitlist, deadline }: Props) {
   const [state, action, pending] = useActionState<SignupState, FormData>(signUp, { status: 'idle' });
+  const [brand, setBrand] = useState<string>(brands[0]);
+  const other = brand === otherBrand;
 
   if (state.status === 'done') {
     return (
@@ -55,17 +59,24 @@ export default function SignupForm({ brands, turnstileKey, waitlist, deadline }:
       <fieldset className="field pw-brand">
         <legend>Jaký máte telefon</legend>
         <div className="pw-brand-options">
-          {brands.map((b, i) => (
+          {brands.map((b) => (
             <label key={b} className="pw-brand-option">
-              <input type="radio" name="brand" value={b} defaultChecked={v ? v.brand === b : i === 0} required />
+              <input type="radio" name="brand" value={b} checked={brand === b} onChange={() => setBrand(b)} required />
               <span>{b}</span>
             </label>
           ))}
         </div>
       </fieldset>
       <div className="field">
-        <label htmlFor="pw-model">Model</label>
-        <input id="pw-model" name="model" className="input" placeholder="např. Find X10 Pro Max" defaultValue={v?.model} required />
+        <label htmlFor="pw-model">{other ? 'Značka a model' : 'Model'}</label>
+        <input
+          id="pw-model"
+          name="model"
+          className="input"
+          placeholder={other ? 'např. iPhone 16 Pro nebo Galaxy S25' : MODEL_HINT[brand] ?? ''}
+          defaultValue={v?.model}
+          required
+        />
       </div>
       {/* Honeypot: hidden from people, bots fill it in. */}
       <div className="pw-hp" aria-hidden="true">
@@ -84,7 +95,7 @@ export default function SignupForm({ brands, turnstileKey, waitlist, deadline }:
       <button type="submit" className="btn btn-black" disabled={pending}>
         {pending ? 'Odesílám…' : waitlist ? 'Zapsat se mezi náhradníky' : 'Odeslat přihlášku'}
       </button>
-      <p className="small muted">Přihlášky bereme do {deadline}. Účast je zdarma.</p>
+      <p className="small muted">Přihlášky bereme do {deadline}, účast je zdarma.</p>
     </form>
   );
 }

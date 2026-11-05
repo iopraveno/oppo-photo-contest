@@ -55,6 +55,11 @@ export async function listSignups(): Promise<Signup[]> {
   return (data ?? []) as Signup[];
 }
 
+/** "OPPO Find X10", or just what they wrote for another brand ("iPhone 16 Pro"). */
+export function phoneLabel(brand: string, model: string) {
+  return brand === PHOTOWALK.otherBrand ? model : `${brand} ${model}`;
+}
+
 export function isSignupOpen(now = new Date()) {
   return now <= new Date(PHOTOWALK.signupEnd) && now < new Date(PHOTOWALK.start);
 }

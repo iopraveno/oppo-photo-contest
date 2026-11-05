@@ -24,7 +24,7 @@ function Row({ s, full }: { s: Signup; full: boolean }) {
       </td>
       <td style={{ whiteSpace: 'nowrap' }}><a href={`tel:${s.phone.replace(/\s/g, '')}`}>{s.phone}</a></td>
       <td>
-        <span className="badge" style={{ marginLeft: 0 }}>{s.brand}</span> {s.model}
+        <span className="badge" style={{ marginLeft: 0 }}>{s.brand === PHOTOWALK.otherBrand ? 'jiná' : s.brand}</span> {s.model}
       </td>
       <td style={{ whiteSpace: 'nowrap' }}>{t(s.created_at)}</td>
       <td>

@@ -52,7 +52,10 @@ export async function signUp(_prev: SignupState, formData: FormData): Promise<Si
   const phone = normalizePhone(values.phone);
   if (!phone) return fail('Zkontrolujte prosím telefonní číslo.');
   if (!(PHOTOWALK.brands as readonly string[]).includes(values.brand)) return fail('Vyberte prosím, jaký máte telefon.');
-  if (values.model.length < 2 || values.model.length > 60) return fail('Napište prosím i model telefonu, třeba Find X10 Pro Max.');
+  const other = values.brand === PHOTOWALK.otherBrand;
+  if (values.model.length < 2 || values.model.length > 60) {
+    return fail(other ? 'Napište prosím, jaký telefon máte, třeba iPhone 16 Pro.' : 'Napište prosím i model telefonu, třeba Find X10 Pro Max.');
+  }
   if (formData.get('consent') !== 'on') return fail('Pro přihlášení je potřeba souhlas se zpracováním údajů.');
   if (!isSupabaseConfigured()) return fail('Web ještě není napojený na databázi.');
 
@@ -85,6 +88,11 @@ export async function signUp(_prev: SignupState, formData: FormData): Promise<Si
     ip_hash: ipHash,
   });
   if (error) {
+    if (error.code === '23514') {
+      // The brand check in the database is older than this option: run supabase/photowalk-jina-znacka.sql.
+      console.error('photowalk signUp: brand rejected by the database check, run supabase/photowalk-jina-znacka.sql');
+      return fail('Tuhle možnost zatím nejde uložit. Zkuste to prosím za chvíli, nebo nám napište.');
+    }
     if (error.code === '23505') {
       return fail('S tímhle e-mailem už přihláška je. Pokud potřebujete něco změnit, odpovězte na e-mail, který vám od nás přišel.');
     }
