@@ -63,7 +63,7 @@ export const PHOTOWALK = {
   // Prague time (CET, UTC+1 in November).
   start: '2026-11-14T14:00:00+01:00',
   end: '2026-11-14T17:00:00+01:00',
-  signupEnd: '2026-11-07T23:59:59+01:00',
+  signupEnd: '2026-11-08T23:59:59+01:00',
   capacity: 12,
   place: 'Vista House',
   address: 'Na Pankráci 30, Praha 4',

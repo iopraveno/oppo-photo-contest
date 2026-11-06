@@ -80,7 +80,7 @@ export const eventTimeLabel = () => {
 const WEEKDAY_GENITIVE: Record<string, string> = {
   pondělí: 'pondělí', úterý: 'úterý', středa: 'středy', čtvrtek: 'čtvrtka', pátek: 'pátku', sobota: 'soboty', neděle: 'neděle',
 };
-/** Deadline after "do": "soboty 7. 11." */
+/** Deadline after "do": "neděle 8. 11." */
 export const signupEndLabel = () => {
   const d = new Date(PHOTOWALK.signupEnd);
   const day = prague({ day: 'numeric' }).format(d).replace(/\.$/, '');
