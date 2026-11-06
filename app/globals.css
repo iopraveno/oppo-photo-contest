@@ -339,33 +339,55 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 .faq-item p { margin: 0 0 24px; color: var(--ink-2); max-width: 780px; line-height: 1.6; }
 
 /* Today's light in Prague */
-.light { background: var(--black); color: var(--white); padding: 40px 0 34px; }
-.light-head { display: grid; gap: 14px; margin-bottom: 40px; }
-@media (min-width: 900px) { .light-head { grid-template-columns: 1fr 2fr; align-items: end; gap: 40px; } }
-.light-title { font-size: 20px; letter-spacing: -0.01em; }
-.light-day { color: var(--mist); font-size: 15px; margin-top: 4px; }
-.light-now { font-size: clamp(22px, 2.6vw, 34px); font-weight: 500; line-height: 1.2; letter-spacing: -0.015em; max-width: 30em; }
-.light-bar { position: relative; display: grid; height: 12px; }
+.light { background: var(--black); color: var(--white); padding: 56px 0 44px; }
+.light-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; }
+.light-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.light-day { color: var(--mist); font-size: 15px; }
+.light-now { margin-top: 10px; max-width: 24em; font-size: clamp(26px, 3.2vw, 42px); font-weight: 500; line-height: 1.15; letter-spacing: -0.022em; text-wrap: balance; }
+.light-tone-blue { color: #93acee; }
+.light-tone-gold { color: var(--light-gold); }
+
+.light-bar { position: relative; margin-top: 66px; }
+.light-track { position: relative; display: grid; height: 14px; border-radius: 7px; overflow: hidden; }
 .light-seg { display: block; }
-.light-seg:first-child { border-radius: 6px 0 0 6px; }
-.light-seg:nth-last-child(1), .light-seg:nth-child(7) { border-radius: 0 6px 6px 0; }
+.light-seg + .light-seg { border-left: 3px solid var(--black); }
 .light-seg.night { background: var(--light-night); }
+.light-seg.night:first-child { background: linear-gradient(90deg, var(--black) 0%, var(--light-night) 85%); }
+.light-seg.night:nth-child(7) { background: linear-gradient(270deg, var(--black) 0%, var(--light-night) 85%); }
 .light-seg.blue { background: var(--light-blue); }
 .light-seg.gold { background: var(--light-gold); }
 .light-seg.day { background: var(--light-day); }
-.light-marker { position: absolute; top: -7px; bottom: -7px; width: 2px; margin-left: -1px; background: var(--white); box-shadow: 0 0 0 2px var(--black); }
-.light-marker span { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 500; white-space: nowrap; }
-.light-legend { list-style: none; padding: 0; margin: 16px 0 0; display: grid; font-size: 14px; color: var(--mist); }
-.light-legend li { display: flex; flex-direction: column; gap: 2px; padding-right: 10px; }
-.light-legend strong { color: var(--white); font-weight: 500; }
-.light-note { margin-top: 22px; font-size: 13px; color: #7a7a7a; }
+.light-sun { position: absolute; top: 3px; bottom: 3px; width: 2px; margin-left: -1px; border-radius: 1px; background: rgba(0, 0, 0, 0.38); }
+.light-passed { position: absolute; left: 0; top: -1px; bottom: -1px; background: rgba(0, 0, 0, 0.55); pointer-events: none; transition: width 0.6s ease; }
+@supports ((backdrop-filter: grayscale(1)) or (-webkit-backdrop-filter: grayscale(1))) {
+  .light-passed { background: rgba(0, 0, 0, 0.12); -webkit-backdrop-filter: grayscale(1) brightness(0.5); backdrop-filter: grayscale(1) brightness(0.5); }
+}
+.light-marker { position: absolute; top: -8px; bottom: -8px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--white); box-shadow: 0 0 0 3px var(--black); }
+.light-marker span { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding: 5px 10px; border-radius: 999px; background: var(--white); color: var(--black); font-size: 13px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.light-marker.at-start span { left: -1px; transform: none; }
+.light-marker.at-end span { left: auto; right: -1px; transform: none; }
+
+.light-legend { list-style: none; padding: 0; margin: 18px 0 0; display: grid; font-size: 14px; line-height: 1.35; color: var(--mist); }
+.light-legend li { display: flex; flex-direction: column; gap: 3px; padding: 0 10px 0 3px; transition: opacity 0.3s ease; }
+.light-legend strong { display: flex; align-items: center; gap: 10px; color: var(--white); font-weight: 500; }
+.light-swatch { display: none; flex: none; width: 18px; height: 6px; border-radius: 3px; background: var(--light-day); }
+.light-legend .blue .light-swatch { background: var(--light-blue); }
+.light-legend .gold .light-swatch { background: var(--light-gold); }
+.light-time { font-variant-numeric: tabular-nums; }
+.light-sunline { font-size: 13px; color: #7a7a7a; }
+.light-legend li.is-past { opacity: 0.4; }
+.light-legend li.is-now strong { font-weight: 700; }
+.light-legend li.is-now.blue strong { color: #93acee; }
+.light-legend li.is-now.gold strong { color: var(--light-gold); }
+.light-legend li.is-now .light-time { color: var(--white); }
+.light-note { margin-top: 28px; font-size: 13px; color: #7a7a7a; }
 @media (max-width: 760px) {
-  .light-legend { grid-template-columns: 1fr !important; gap: 8px; margin-top: 20px; }
-  .light-legend li { grid-column: auto !important; flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; padding: 0; }
-  .light-legend li strong { display: inline-flex; align-items: center; gap: 10px; }
-  .light-legend li strong::before { content: ''; width: 18px; height: 6px; border-radius: 3px; background: var(--light-day); }
-  .light-legend li.gold strong::before { background: var(--light-gold); }
-  .light-legend li.blue strong::before { background: var(--light-blue); }
+  .light { padding: 44px 0 36px; }
+  .light-bar { margin-top: 56px; }
+  .light-legend { grid-template-columns: 1fr !important; gap: 12px; margin-top: 26px; }
+  .light-legend li { grid-column: auto !important; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 12px; row-gap: 2px; padding: 0; }
+  .light-swatch { display: block; }
+  .light-sunline { grid-column: 1 / -1; padding-left: 28px; }
 }
 
 /* Photo walk (/photowalk, /admin/photowalk) */

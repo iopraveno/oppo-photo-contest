@@ -56,15 +56,23 @@ function inMinutes(from: number, to: number) {
   return h ? `${h} h${m ? ` ${m} min` : ''}` : `${m} min`;
 }
 
-/** One sentence about the light right now, e.g. "Právě je zlatá hodina, potrvá do 16:57." */
-export function lightNow(now: number): string {
+export type LightTone = 'blue' | 'gold';
+export type LightChunk = { text: string; tone?: LightTone };
+
+const plain = (text: string): LightChunk => ({ text });
+const blue = (text: string): LightChunk => ({ text, tone: 'blue' });
+const gold = (text: string): LightChunk => ({ text, tone: 'gold' });
+
+/** One sentence about the light right now, in chunks so the name of the light can take its colour:
+ *  "Právě je [zlatá hodina], potrvá do 16:57." */
+export function lightNow(now: number): LightChunk[] {
   const t = lightDay(now);
-  if (now < t.dawn) return `Ranní modrá hodina začne v ${hhmm(t.dawn)}, zlatá v ${hhmm(t.morningBlueEnd)}.`;
-  if (now < t.morningBlueEnd) return `Právě je modrá hodina. Zlatá začne v ${hhmm(t.morningBlueEnd)}.`;
-  if (now < t.morningGoldenEnd) return `Právě je ranní zlatá hodina, potrvá do ${hhmm(t.morningGoldenEnd)}.`;
-  if (now < t.eveningGoldenStart) return `Zlatá hodina začne v ${hhmm(t.eveningGoldenStart)}, za ${inMinutes(now, t.eveningGoldenStart)}.`;
-  if (now < t.eveningBlueStart) return `Právě je zlatá hodina, potrvá do ${hhmm(t.eveningBlueStart)}.`;
-  if (now < t.dusk) return `Právě je modrá hodina, potrvá do ${hhmm(t.dusk)}.`;
+  if (now < t.dawn) return [plain('Ranní '), blue('modrá hodina'), plain(` začne v ${hhmm(t.dawn)}, `), gold('zlatá'), plain(` v ${hhmm(t.morningBlueEnd)}.`)];
+  if (now < t.morningBlueEnd) return [plain('Právě je '), blue('modrá hodina'), plain('. '), gold('Zlatá'), plain(` začne v ${hhmm(t.morningBlueEnd)}.`)];
+  if (now < t.morningGoldenEnd) return [plain('Právě je ranní '), gold('zlatá hodina'), plain(`, potrvá do ${hhmm(t.morningGoldenEnd)}.`)];
+  if (now < t.eveningGoldenStart) return [gold('Zlatá hodina'), plain(` začne v ${hhmm(t.eveningGoldenStart)}, za ${inMinutes(now, t.eveningGoldenStart)}.`)];
+  if (now < t.eveningBlueStart) return [plain('Právě je '), gold('zlatá hodina'), plain(`, potrvá do ${hhmm(t.eveningBlueStart)}.`)];
+  if (now < t.dusk) return [plain('Právě je '), blue('modrá hodina'), plain(`, potrvá do ${hhmm(t.dusk)}.`)];
   const tomorrow = lightDay(now, 1);
-  return `Dnešní světlo skončilo. Zítra ráno modrá hodina v ${hhmm(tomorrow.dawn)}, zlatá v ${hhmm(tomorrow.morningBlueEnd)}.`;
+  return [plain('Dnešní světlo skončilo. Zítra ráno '), blue('modrá hodina'), plain(` v ${hhmm(tomorrow.dawn)}, `), gold('zlatá'), plain(` v ${hhmm(tomorrow.morningBlueEnd)}.`)];
 }
