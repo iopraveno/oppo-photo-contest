@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 // Hidden page: reachable from the invitation e-mail only, not linked from the site and kept out of search.
 export const metadata: Metadata = {
   title: 'Photo walk s Martinem Rakem',
-  description: 'Sobotní odpoledne na Vyšehradě s fotografem Martinem Rakem. 12 míst, přihlášení předem.',
+  description: 'Sobotní odpoledne na Vyšehradě s fotografem Martinem Rakem. 14 míst, přihlášení předem.',
   robots: { index: false, follow: false, nocache: true },
 };
 
