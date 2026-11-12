@@ -212,7 +212,7 @@ export function reminderEmail(token: string): Mail {
     ${details([
       ['Kdy', `${when()}<br><span style="color:#5F5A53;">sraz ve 14:00, ať stihneme kávu i úvod</span>`],
       ['Kde', where()],
-      ['Telefon', `<a href="tel:${PHOTOWALK.contactPhone.replace(/\s/g, '')}" style="color:#141414;font-weight:700;text-decoration:none;">${PHOTOWALK.contactPhone}</a><br><span style="color:#5F5A53;">v den akce, když nestíháte nebo nás nemůžete najít</span>`],
+      ['Telefon', `<a href="tel:${PHOTOWALK.contactPhone.replace(/\s/g, '')}" style="color:#141414;font-weight:700;text-decoration:none;">${PHOTOWALK.contactPhone}</a><br><span style="color:#5F5A53;">kdyby nastala komplikace nebo jste dorazili později, stačí zavolat nebo napsat</span>`],
     ])}
     ${muted('S sebou nabitý telefon, powerbanku a teplé oblečení. Na vyzkoušení budeme mít i nové Find X10.', 24)}
     ${p('Těšíme se,<br><strong>tým OPPO Česko</strong>', 24)}`;
@@ -227,7 +227,7 @@ export function reminderEmail(token: string): Mail {
     '',
     `Kdy: ${when()} (sraz ve 14:00)`,
     `Kde: ${PHOTOWALK.place}, ${PHOTOWALK.address} (${PHOTOWALK.transport})`,
-    `Telefon v den akce: ${PHOTOWALK.contactPhone}`,
+    `Telefon: ${PHOTOWALK.contactPhone} (kdyby nastala komplikace nebo jste dorazili později, stačí zavolat nebo napsat)`,
     '',
     'Tým OPPO Česko',
   ].join('\n');

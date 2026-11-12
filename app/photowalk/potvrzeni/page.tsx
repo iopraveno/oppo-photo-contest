@@ -37,6 +37,7 @@ const SAMPLE: Signup = {
 };
 
 const phoneHref = `tel:${PHOTOWALK.contactPhone.replace(/\s/g, '')}`;
+const smsHref = `sms:${PHOTOWALK.contactPhone.replace(/\s/g, '')}`;
 
 function Answer({ token, answer, label, primary }: { token: string; answer: 'yes' | 'no'; label: string; primary: boolean }) {
   return (
@@ -54,6 +55,15 @@ function Facts({ name }: { name: string }) {
       <div><dt>Kdy</dt><dd>{eventDayLabel()}, {eventTimeLabel()}</dd></div>
       <div><dt>Sraz</dt><dd>{PHOTOWALK.place}, {PHOTOWALK.address}, <a href={PHOTOWALK.mapsUrl} target="_blank" rel="noopener noreferrer">{PHOTOWALK.transport}</a></dd></div>
       <div><dt>Přihláška</dt><dd>{name}</dd></div>
+      <div>
+        <dt>Telefon</dt>
+        <dd>
+          <a href={phoneHref} className="pw-rsvp-phone">{PHOTOWALK.contactPhone}</a>
+          <span className="pw-rsvp-note">
+            Kdyby nastala komplikace nebo jste dorazili později, stačí <a href={phoneHref}>zavolat</a> nebo <a href={smsHref}>napsat</a>.
+          </span>
+        </dd>
+      </div>
     </dl>
   );
 }

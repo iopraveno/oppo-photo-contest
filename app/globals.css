@@ -468,6 +468,9 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 .pw-rsvp-facts dt { font-weight: 700; }
 .pw-rsvp-facts dd { margin: 0; color: var(--ink-2); }
 .pw-rsvp-facts a { color: var(--ink); }
+.pw-rsvp-phone { font-weight: 700; text-decoration: none; white-space: nowrap; }
+.pw-rsvp-note { display: block; margin-top: 2px; font-size: 14px; color: var(--grey); }
+.pw-rsvp-note a { color: var(--ink-2); }
 .pw-rsvp-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
 .pw-rsvp-change { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
 .pw-rsvp-change p { margin: 0; }
