@@ -2,20 +2,49 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { isAdminEmail, requirePhotowalkAdmin } from '@/lib/auth';
 import { PHOTOWALK } from '@/lib/config';
-import { listSignups, type Signup } from '@/lib/photowalk';
+import { attendanceReady, listSignups, type Signup } from '@/lib/photowalk';
 import { isMailConfigured, mailSetupSummary } from '@/lib/mail';
 import Seats from '@/components/Seats';
-import { confirmSignup, deleteSignup, resendConfirmation, sendTestEmail, setSignupStatus } from './actions';
+import { confirmSignup, deleteSignup, resendConfirmation, sendReminder, sendReminders, sendReminderTest, sendTestEmail, setSignupStatus } from './actions';
 
 export const dynamic = 'force-dynamic';
+// Sending the reminder to everyone goes one e-mail at a time over SMTP.
+export const maxDuration = 60;
 export const metadata: Metadata = { title: 'Photo walk: přihlášky', robots: { index: false, follow: false } };
 
 type Search = Promise<{ ok?: string; err?: string }>;
 
 const timeFmt = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' });
-const t = (iso: string | null) => (iso ? timeFmt.format(new Date(iso)) : '');
+const t = (iso: string | null | undefined) => (iso ? timeFmt.format(new Date(iso)) : '');
 
-function Row({ s, full }: { s: Signup; full: boolean }) {
+const MIGRATION = `alter table public.photowalk_signups
+  add column if not exists rsvp_token       uuid not null default gen_random_uuid(),
+  add column if not exists attendance       text check (attendance in ('yes', 'no')),
+  add column if not exists attendance_at    timestamptz,
+  add column if not exists reminder_sent_at timestamptz;
+create unique index if not exists photowalk_signups_rsvp_token_idx on public.photowalk_signups (rsvp_token);`;
+
+/** The participant's own answer from /photowalk/potvrzeni. */
+function Attendance({ s }: { s: Signup }) {
+  if (s.status === 'confirmed' && s.attendance === 'yes') {
+    return <span className="small"><span className="att att-yes">Dorazí</span><br /><span className="muted">potvrdil(a) {t(s.attendance_at)}</span></span>;
+  }
+  if (s.status === 'confirmed') {
+    return (
+      <span className="small">
+        <span className="att att-none">Bez odpovědi</span>
+        <br />
+        <span className="muted">{s.reminder_sent_at ? `připomínka ${t(s.reminder_sent_at)}` : 'připomínka zatím neodešla'}</span>
+      </span>
+    );
+  }
+  if (s.attendance === 'no') {
+    return <span className="small"><span className="att att-no">Uvolnil(a) místo</span><br /><span className="muted">{t(s.attendance_at)}</span></span>;
+  }
+  return null;
+}
+
+function Row({ s, full, attendance }: { s: Signup; full: boolean; attendance: boolean }) {
   return (
     <tr className={s.status === 'declined' ? 'is-hidden' : undefined}>
       <td>
@@ -36,8 +65,9 @@ function Row({ s, full }: { s: Signup; full: boolean }) {
           </span>
         )}
         {s.status === 'pending' && <span className="small muted">čeká</span>}
-        {s.status === 'declined' && <span className="small muted">odmítnuto</span>}
+        {s.status === 'declined' && <span className="small muted">{s.attendance === 'no' ? 'nedorazí' : 'odmítnuto'}</span>}
       </td>
+      {attendance && <td><Attendance s={s} /></td>}
       <td>
         <div className="row-actions">
           {s.status !== 'confirmed' && (
@@ -46,6 +76,12 @@ function Row({ s, full }: { s: Signup; full: boolean }) {
               <button className="btn btn-black btn-small" type="submit" disabled={full} title={full ? 'Kapacita je plná' : undefined}>
                 Potvrdit místo
               </button>
+            </form>
+          )}
+          {attendance && s.status === 'confirmed' && s.attendance !== 'yes' && (
+            <form action={sendReminder}>
+              <input type="hidden" name="id" value={s.id} />
+              <button className="btn btn-ghost btn-small" type="submit">{s.reminder_sent_at ? 'Připomenout znovu' : 'Poslat připomínku'}</button>
             </form>
           )}
           {s.status === 'confirmed' && (
@@ -79,7 +115,7 @@ function Row({ s, full }: { s: Signup; full: boolean }) {
   );
 }
 
-function Table({ title, rows, full, empty }: { title: string; rows: Signup[]; full: boolean; empty: string }) {
+function Table({ title, rows, full, empty, attendance = false }: { title: string; rows: Signup[]; full: boolean; empty: string; attendance?: boolean }) {
   return (
     <div className="card" style={{ overflowX: 'auto' }}>
       <h2 style={{ fontSize: 22, marginBottom: 12 }}>{title} ({rows.length})</h2>
@@ -94,10 +130,11 @@ function Table({ title, rows, full, empty }: { title: string; rows: Signup[]; fu
               <th>Model</th>
               <th>Přihlášeno</th>
               <th>Stav</th>
+              {attendance && <th>Účast</th>}
               <th>Akce</th>
             </tr>
           </thead>
-          <tbody>{rows.map((s) => <Row key={s.id} s={s} full={full} />)}</tbody>
+          <tbody>{rows.map((s) => <Row key={s.id} s={s} full={full} attendance={attendance} />)}</tbody>
         </table>
       )}
     </div>
@@ -115,6 +152,12 @@ export default async function PhotoWalkAdmin({ searchParams }: { searchParams: S
   const declined = all.filter((s) => s.status === 'declined');
   const full = confirmed.length >= PHOTOWALK.capacity;
   const free = Math.max(PHOTOWALK.capacity - confirmed.length, 0);
+  const ready = await attendanceReady();
+  const coming = confirmed.filter((s) => s.attendance === 'yes').length;
+  const noAnswer = confirmed.filter((s) => !s.attendance);
+  const notReminded = noAnswer.filter((s) => !s.reminder_sent_at).length;
+  const gaveUp = declined.filter((s) => s.attendance === 'no').length;
+  const notifyTeam = Boolean((process.env.PHOTOWALK_NOTIFY_EMAILS || '').trim());
 
   return (
     <section className="section">
@@ -163,9 +206,52 @@ export default async function PhotoWalkAdmin({ searchParams }: { searchParams: S
           )}
         </div>
 
+        {ready ? (
+          <div className="card">
+            <h2 style={{ fontSize: 22, marginBottom: 8 }}>Připomínka před akcí</h2>
+            <p className="small muted" style={{ maxWidth: '62em', margin: 0 }}>
+              Potvrzeným odejde e-mail „Dorazíte v sobotu?“ s osobním odkazem na stránku, kde jedním klepnutím potvrdí účast, nebo
+              místo uvolní. Kdo místo uvolní, přesune se mezi odmítnuté a na webu se vyprázdní jeho čtvereček, takže můžeš potvrdit
+              náhradníka.{' '}
+              {notifyTeam
+                ? 'Když někdo místo uvolní, přijde upozornění na adresy z PHOTOWALK_NOTIFY_EMAILS.'
+                : 'Upozornění na uvolněná místa se neposílají, protože na Vercelu chybí PHOTOWALK_NOTIFY_EMAILS. Sleduj proto tenhle přehled.'}
+            </p>
+            <div className="stats" style={{ marginTop: 18 }}>
+              <div className="stat"><div className="stat-num">{coming} / {confirmed.length}</div><div className="muted">potvrdilo, že dorazí</div></div>
+              <div className="stat"><div className="stat-num">{noAnswer.length}</div><div className="muted">bez odpovědi</div></div>
+              <div className="stat"><div className="stat-num">{gaveUp}</div><div className="muted">uvolnilo místo</div></div>
+            </div>
+            <div className="row-actions" style={{ marginTop: 18 }}>
+              <form action={sendReminders}>
+                <input type="hidden" name="mode" value="nove" />
+                <button className="btn btn-black btn-small" type="submit" disabled={notReminded === 0}>
+                  Poslat připomínku{notReminded ? ` (${notReminded})` : ''}
+                </button>
+              </form>
+              <form action={sendReminders}>
+                <input type="hidden" name="mode" value="znovu" />
+                <button className="btn btn-ghost btn-small" type="submit" disabled={noAnswer.length === 0}>
+                  Připomenout znovu všem bez odpovědi{noAnswer.length ? ` (${noAnswer.length})` : ''}
+                </button>
+              </form>
+              <form action={sendReminderTest}>
+                <button className="btn btn-ghost btn-small" type="submit">Ukázku připomínky na {user.email}</button>
+              </form>
+              <a className="btn btn-ghost btn-small" href="/photowalk/potvrzeni?t=ukazka" target="_blank" rel="noopener noreferrer">Ukázka stránky</a>
+            </div>
+          </div>
+        ) : (
+          <div className="alert alert-err">
+            Pro připomínku a potvrzování účasti je potřeba jednou spustit v Supabase (SQL Editor → New query) tenhle kód. Je i v
+            repu jako supabase/photowalk-ucast.sql.
+            <pre className="pw-sql">{MIGRATION}</pre>
+          </div>
+        )}
+
         <Table title="Čekají na potvrzení" rows={pending} full={full} empty="Žádná nová přihláška." />
-        <Table title="Potvrzení" rows={confirmed} full={full} empty="Zatím nikdo nemá potvrzené místo." />
-        {declined.length > 0 && <Table title="Odmítnutí" rows={declined} full={full} empty="" />}
+        <Table title="Potvrzení" rows={confirmed} full={full} empty="Zatím nikdo nemá potvrzené místo." attendance={ready} />
+        {declined.length > 0 && <Table title="Odmítnutí" rows={declined} full={full} empty="" attendance={ready && gaveUp > 0} />}
       </div>
     </section>
   );

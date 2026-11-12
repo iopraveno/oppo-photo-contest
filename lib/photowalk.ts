@@ -17,7 +17,15 @@ export type Signup = {
   created_at: string;
   confirmed_at: string | null;
   confirm_email_sent_at: string | null;
+  // From supabase/photowalk-ucast.sql; missing until that migration runs.
+  rsvp_token?: string;
+  attendance?: Attendance | null;
+  attendance_at?: string | null;
+  reminder_sent_at?: string | null;
 };
+
+/** The participant's own answer from /photowalk/potvrzeni: yes = will come, no = gave the place up. */
+export type Attendance = 'yes' | 'no';
 
 export type SeatCounts = { confirmed: number; pending: number; declined: number };
 
@@ -65,6 +73,43 @@ export function isSignupOpen(now = new Date()) {
 }
 
 export const PHOTOWALK_URL = `${SITE_URL}/photowalk`;
+
+// ---- Attendance confirmation ----------------------------------------------
+
+/** Token that opens /photowalk/potvrzeni as a read-only sample (for the admin's test e-mail). */
+export const RSVP_SAMPLE = 'ukazka';
+
+/** Personal link from the reminder e-mail. `v` only pre-selects a button: e-mail scanners open links, so nothing is saved on GET. */
+export function rsvpUrl(token: string, choice?: 'ano' | 'ne') {
+  return `${PHOTOWALK_URL}/potvrzeni?t=${encodeURIComponent(token)}${choice ? `&v=${choice}` : ''}`;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function findSignupByToken(token: string): Promise<Signup | null> {
+  if (!UUID.test(token) || !isSupabaseConfigured()) return null;
+  const { data, error } = await createAdminClient()
+    .from('photowalk_signups')
+    .select('*')
+    .eq('event', PHOTOWALK.slug)
+    .eq('rsvp_token', token)
+    .maybeSingle();
+  if (error) {
+    console.error('findSignupByToken failed (is supabase/photowalk-ucast.sql applied?):', error.message);
+    return null;
+  }
+  return (data as Signup) ?? null;
+}
+
+/** True once supabase/photowalk-ucast.sql has run (the attendance columns exist). */
+export async function attendanceReady() {
+  if (!isSupabaseConfigured()) return false;
+  const { error } = await createAdminClient().from('photowalk_signups').select('rsvp_token').limit(1);
+  return !error;
+}
+
+/** Answers are open from the moment a place is confirmed until the walk starts. */
+export const attendanceOpen = (now = new Date()) => now < new Date(PHOTOWALK.start);
 
 // ---- Calendar -------------------------------------------------------------
 

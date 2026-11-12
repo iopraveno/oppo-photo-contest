@@ -25,8 +25,11 @@ export async function GET(request: NextRequest) {
       .eq('event', PHOTOWALK.slug)
       .order('created_at', { ascending: true });
     body = csv([
-      ['jmeno', 'email', 'telefon', 'znacka', 'model', 'stav', 'prihlaseno', 'potvrzeno', 'email_odeslan'],
-      ...(data ?? []).map((s) => [s.name, s.email, s.phone, s.brand, s.model, s.status, s.created_at, s.confirmed_at, s.confirm_email_sent_at]),
+      ['jmeno', 'email', 'telefon', 'znacka', 'model', 'stav', 'prihlaseno', 'potvrzeno', 'email_odeslan', 'ucast', 'odpoved', 'pripominka'],
+      ...(data ?? []).map((s) => [
+        s.name, s.email, s.phone, s.brand, s.model, s.status, s.created_at, s.confirmed_at, s.confirm_email_sent_at,
+        s.attendance === 'yes' ? 'dorazi' : s.attendance === 'no' ? 'nedorazi' : '', s.attendance_at ?? '', s.reminder_sent_at ?? '',
+      ]),
     ]);
   } else if (type === 'fotky') {
     const { data } = await supabase.from('entry_scores').select('*').order('votes', { ascending: false });

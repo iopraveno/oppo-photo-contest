@@ -304,6 +304,11 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 .admin-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--grey); }
 .admin-table tr.is-hidden td { opacity: 0.5; }
 .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.att { display: inline-block; font-size: 12px; font-weight: 700; line-height: 1.5; padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+.att-yes { background: #e6f6ed; color: #135a35; }
+.att-none { background: var(--paper); color: var(--ink-2); border: 1px solid var(--line); }
+.att-no { background: #fbeaea; color: #8a1c1c; }
+.pw-sql { margin: 12px 0 0; padding: 14px 16px; background: #fff; color: var(--ink); border-radius: 8px; font-size: 13px; line-height: 1.5; overflow-x: auto; user-select: all; }
 .btn-ghost { background: transparent; color: inherit; border-color: var(--line); }
 .btn-dark { background: var(--black); color: var(--white); }
 .btn-primary { background: var(--oppo); color: var(--white); }
@@ -450,6 +455,26 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 .pw-consent input { margin-top: 3px; flex: none; width: 18px; height: 18px; accent-color: #141414; }
 .pw-hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .pw-done { display: flex; flex-direction: column; gap: 12px; }
+
+/* Attendance confirmation (/photowalk/potvrzeni) */
+.pw-rsvp-band { padding: clamp(48px, 8vw, 104px) 0; min-height: 62vh; }
+.pw-rsvp { max-width: 720px; }
+.pw-rsvp-title { font-size: clamp(32px, 4.4vw, 48px); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 14px; }
+.pw-rsvp-card .alert { margin: 0 0 20px; }
+.pw-rsvp-text { font-size: 18px; line-height: 1.5; color: var(--ink-2); max-width: 34em; margin: 0; }
+.pw-rsvp-text a { color: var(--ink); font-weight: 700; }
+.pw-rsvp-facts { margin: 24px 0 0; display: grid; border-top: 1px solid var(--line); }
+.pw-rsvp-facts > div { display: grid; grid-template-columns: 100px 1fr; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.pw-rsvp-facts dt { font-weight: 700; }
+.pw-rsvp-facts dd { margin: 0; color: var(--ink-2); }
+.pw-rsvp-facts a { color: var(--ink); }
+.pw-rsvp-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.pw-rsvp-change { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+.pw-rsvp-change p { margin: 0; }
+@media (max-width: 520px) {
+  .pw-rsvp-actions .btn, .pw-rsvp-actions form, .pw-rsvp-actions form .btn { width: 100%; }
+  .pw-rsvp-facts > div { grid-template-columns: 1fr; gap: 2px; }
+}
 .pw-done h3 { font-size: 28px; }
 .pw-done p { color: var(--ink-2); }
 .pw-done-mark { width: 44px; height: 44px; background: var(--pw-orange); position: relative; }

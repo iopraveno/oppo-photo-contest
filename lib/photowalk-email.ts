@@ -1,6 +1,6 @@
 import 'server-only';
 import { ORGANIZER, PHOTOWALK, SITE_URL } from './config';
-import { buildIcs, eventDayLabel, eventTimeLabel, googleCalendarUrl, phoneLabel, PHOTOWALK_URL, type SeatCounts, type Signup } from './photowalk';
+import { buildIcs, eventDayLabel, eventTimeLabel, googleCalendarUrl, phoneLabel, PHOTOWALK_URL, rsvpUrl, type SeatCounts, type Signup } from './photowalk';
 import type { Mail } from './mail';
 
 // Table-based HTML so it renders the same in Gmail, Outlook and Apple Mail. Same look as the invitation e-mail.
@@ -70,6 +70,12 @@ function button(href: string, label: string, dark = true) {
 }
 
 const when = () => `${eventDayLabel()}, ${eventTimeLabel()}`;
+/** "v sobotu 14. listopadu" (eventDayLabel is in the nominative). */
+const WEEKDAY_ACC: Record<string, string> = { středa: 'středu', sobota: 'sobotu', neděle: 'neděli' };
+const onDay = () => {
+  const [weekday, ...rest] = eventDayLabel().split(' ');
+  return { weekday: WEEKDAY_ACC[weekday] ?? weekday, full: [WEEKDAY_ACC[weekday] ?? weekday, ...rest].join(' ') };
+};
 const where = () =>
   `${PHOTOWALK.place}, ${PHOTOWALK.address}<br><span style="color:#5F5A53;">${PHOTOWALK.transport}</span> &nbsp;<a href="${PHOTOWALK.mapsUrl}" target="_blank" style="color:#141414;text-decoration:underline;">Mapa</a>`;
 
@@ -186,6 +192,69 @@ export function confirmedEmail(): Mail {
     html: layout({ preheader: `${when()}, ${PHOTOWALK.place}. Přidejte si to do kalendáře.`, title: 'Potvrzené místo na photo walku', body, hero: true }),
     text,
     attachments: [{ filename: 'photowalk.ics', content: buildIcs(), contentType: 'text/calendar; charset=utf-8; method=PUBLISH' }],
+  };
+}
+
+/** A few days before the walk: confirm you are coming, or give the place to someone on the waiting list. */
+export function reminderEmail(token: string): Mail {
+  const yes = rsvpUrl(token, 'ano');
+  const no = rsvpUrl(token, 'ne');
+  const lead = `v ${onDay().full} ve 14:00 vyrážíme s Martinem Rakem fotit Vyšehrad a vy máte jedno z ${PHOTOWALK.capacity} míst. Dejte nám prosím vědět, jestli platí, že dorazíte. Když to nevyjde, uvolněte místo, ať ho můžeme nabídnout někomu z náhradníků.`;
+  const body = `
+    ${h1(`Dorazíte v ${onDay().weekday}?`)}
+    ${p('Dobrý den,', 22)}
+    ${p(lead)}
+    <div style="padding-top:26px;">
+      ${button(yes, 'Ano, dorazím', false)}
+      ${button(no, 'Nedorazím, uvolním místo')}
+    </div>
+    ${muted('Tlačítko otevře stránku, kde odpověď jedním klepnutím potvrdíte. Kdyby se vám plány změnily, odpověď tam jde upravit.', 6)}
+    ${details([
+      ['Kdy', `${when()}<br><span style="color:#5F5A53;">sraz ve 14:00, ať stihneme kávu i úvod</span>`],
+      ['Kde', where()],
+      ['Telefon', `<a href="tel:${PHOTOWALK.contactPhone.replace(/\s/g, '')}" style="color:#141414;font-weight:700;text-decoration:none;">${PHOTOWALK.contactPhone}</a><br><span style="color:#5F5A53;">v den akce, když nestíháte nebo nás nemůžete najít</span>`],
+    ])}
+    ${muted('S sebou nabitý telefon, powerbanku a teplé oblečení. Na vyzkoušení budeme mít i nové Find X10.', 24)}
+    ${p('Těšíme se,<br><strong>tým OPPO Česko</strong>', 24)}`;
+  const text = [
+    `Dorazíte v ${onDay().weekday}?`,
+    '',
+    'Dobrý den,',
+    lead,
+    '',
+    `Ano, dorazím: ${yes}`,
+    `Nedorazím, uvolním místo: ${no}`,
+    '',
+    `Kdy: ${when()} (sraz ve 14:00)`,
+    `Kde: ${PHOTOWALK.place}, ${PHOTOWALK.address} (${PHOTOWALK.transport})`,
+    `Telefon v den akce: ${PHOTOWALK.contactPhone}`,
+    '',
+    'Tým OPPO Česko',
+  ].join('\n');
+  return {
+    to: '',
+    subject: 'Sobota s Martinem Rakem: dorazíte?',
+    html: layout({ preheader: 'Potvrďte prosím jedním klepnutím, že dorazíte, nebo uvolněte místo pro náhradníka.', title: 'Dorazíte na photo walk?', body }),
+    text,
+  };
+}
+
+/** Heads-up for the team when someone answers from /photowalk/potvrzeni in a way that changes the seats. */
+export function attendanceNotifyEmail(s: Pick<Signup, 'name' | 'email' | 'phone'>, change: 'freed' | 'back', counts: SeatCounts): Mail {
+  const free = Math.max(PHOTOWALK.capacity - counts.confirmed, 0);
+  const lines = [
+    change === 'freed' ? `${s.name} nedorazí a uvolnil(a) místo.` : `${s.name} nakonec dorazí a vzal(a) si místo zpátky.`,
+    `E-mail: ${s.email}`,
+    `Telefon: ${s.phone}`,
+    '',
+    `Potvrzeno ${counts.confirmed} z ${PHOTOWALK.capacity}, volných míst ${free}, náhradníků čeká ${counts.pending}.`,
+    change === 'freed' && counts.pending > 0 ? `Potvrdit náhradníka: ${SITE_URL}/admin/photowalk` : `Přehled: ${SITE_URL}/admin/photowalk`,
+  ];
+  return {
+    to: '',
+    subject: change === 'freed' ? `Photo walk: ${s.name} uvolnil(a) místo` : `Photo walk: ${s.name} se vrací`,
+    html: `<div style="${F}font-size:15px;line-height:24px;color:#141414;">${lines.map((l) => esc(l)).join('<br>')}</div>`,
+    text: lines.join('\n'),
   };
 }
 
