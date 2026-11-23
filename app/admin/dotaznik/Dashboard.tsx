@@ -162,7 +162,7 @@ export default function Dashboard({
       .filter(Boolean)
       .join(', ');
   };
-  const columns = tableColumns(def.questions);
+  const columns = tableColumns([...def.questions, ...(def.archivedQuestions ?? [])]);
   const sectionIds = Object.keys(def.sections);
 
   return (

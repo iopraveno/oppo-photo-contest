@@ -39,7 +39,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     title: 'Jaký je váš první dojem z širšího formátu telefonu čistě na základě fotek či osobní zkušenosti?',
     help: ONE,
     options: [
-      { value: 'super', label: 'Super nápad - konečně praktičtější displej na obsah a práci' },
+      { value: 'super', label: 'Super nápad – konečně praktičtější displej na obsah a práci' },
       { value: 'osahat', label: 'Zajímavé, ale musím si to nejdřív osahat v ruce' },
       { value: 'zbytecne', label: 'Přijde mi to zbytečně široké a nepraktické' },
     ],
@@ -69,7 +69,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     title: 'Jaká velikost širšího telefonu by pro vás byla ideální?',
     help: ONE,
     options: [
-      { value: 'kompakt', label: 'Kompaktnější verze (nižší výška, ale příjemná šířka - dobře padne do ruky i kapsy)' },
+      { value: 'kompakt', label: 'Kompaktnější verze (nižší výška, ale příjemná šířka – dobře padne do ruky i kapsy)' },
       { value: 'vlajkova', label: 'Standardní vlajková velikost (velký, široký displej na maximum obsahu)' },
       { value: 'ramecky', label: 'Záleží hlavně na tenkých rámečcích a celkové hmotnosti' },
       { value: 'zadna', label: 'Žádná, preferuji klasický telefon' },
@@ -138,9 +138,28 @@ export const ANKETA_QUESTIONS: Question[] = [
     ],
   },
   {
+    id: 'phone_priorities',
+    section: 'otazky',
+    short: 'Priority při výběru telefonu',
+    kind: 'multi',
+    ranked: true,
+    title: 'Co je pro vás důležité při výběru telefonu?',
+    help: 'Označte od nejdůležitějšího po nejméně. První kliknutí = 1. místo. Opětovným kliknutím volbu odeberete a můžete pořadí změnit.',
+    options: [
+      { value: 'ergonomie_design', label: 'Ergonomie & design' },
+      { value: 'fotoaparaty', label: 'Špičkové fotoaparáty' },
+      { value: 'baterie', label: 'Velká baterie' },
+      { value: 'cena', label: 'Cena' },
+    ],
+  },
+];
+
+// Historical wording stays available only in the admin table and CSV.
+const ANKETA_ARCHIVED_QUESTIONS: Question[] = [
+  {
     id: 'convince_ranked',
     section: 'otazky',
-    short: 'Co by přesvědčilo',
+    short: 'Dříve: co by přesvědčilo',
     kind: 'multi',
     ranked: true,
     previousId: 'convince',
@@ -162,6 +181,7 @@ export const ANKETA: SurveyDef = {
   path: '/dotaznik/anketa',
   name: 'Testovací anketa',
   questions: ANKETA_QUESTIONS,
+  archivedQuestions: ANKETA_ARCHIVED_QUESTIONS,
   sections: { uvod: 'Úvod', otazky: 'Otázky' },
   open: [],
   meeting: false,

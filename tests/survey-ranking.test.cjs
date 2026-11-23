@@ -12,7 +12,7 @@ require.extensions['.ts'] = (module, filename) => {
 const { ANKETA } = require('../lib/survey-anketa.ts');
 const { cleanAnswers, isAnswered, formatAnswer, formatResponseAnswer } = require('../lib/survey.ts');
 const ranking = ANKETA.questions.at(-1);
-const ordered = ['cena', 'foto_baterie', 'vyzkouseni', 'ergonomie'];
+const ordered = ['cena', 'fotoaparaty', 'baterie', 'ergonomie_design'];
 
 test('all nine questions remain, with purchase before the final ranking', () => {
   assert.equal(ANKETA.questions.length, 9);
@@ -33,16 +33,24 @@ test('partial, duplicate, unknown and mixed opt-out rankings are rejected', () =
   }
 });
 
-test('exclusive opt-out is valid on its own and has no artificial rank', () => {
-  assert.equal(isAnswered(ranking, ['nic']), true);
-  assert.deepEqual(cleanAnswers({ [ranking.id]: ['nic'] }, [ranking]).answers[ranking.id], ['nic']);
-  assert.equal(formatAnswer(ranking, ['nic']), ranking.options.find(o => o.value === 'nic').label);
+test('the final question exactly matches the approved priorities and has no opt-out', () => {
+  assert.equal(ranking.title, 'Co je pro vás důležité při výběru telefonu?');
+  assert.deepEqual(ranking.options.map(o => o.label), ['Ergonomie & design', 'Špičkové fotoaparáty', 'Velká baterie', 'Cena']);
+  assert.equal(ranking.options.some(o => o.exclusive), false);
+  assert.equal(isAnswered(ranking, ['nic']), false);
+  assert.ok(cleanAnswers({ [ranking.id]: ['nic'] }, [ranking]).error);
 });
 
-test('legacy selections are readable and never accepted as a new ranking', () => {
+test('historical answers keep their original labels in a separate export column', () => {
+  const archived = ANKETA.archivedQuestions[0];
   const old = { convince: ['cena', 'vyzkouseni'] };
-  assert.match(formatResponseAnswer(ranking, old), /^Dřívější výběr bez pořadí: /);
-  assert.ok(cleanAnswers(old, [ranking]).error);
+  assert.match(formatResponseAnswer(archived, old), /^Dřívější výběr bez pořadí: /);
+  assert.match(formatResponseAnswer(archived, old), /Možnost si ho předem vyzkoušet/);
+  const oldRanked = { convince_ranked: ['foto_baterie', 'ergonomie', 'cena', 'vyzkouseni'] };
+  assert.match(formatResponseAnswer(archived, oldRanked), /^1\. Špičkové fotoaparáty a velká baterie/);
+  assert.equal(formatResponseAnswer(ranking, old), '');
+  assert.equal(formatResponseAnswer(ranking, oldRanked), '');
+  assert.ok(cleanAnswers(oldRanked, [ranking]).error);
 });
 
 test('a full questionnaire accepts rankings while ordinary multi-choice keeps working', () => {

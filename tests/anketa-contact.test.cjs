@@ -10,7 +10,7 @@ const compile = (filename) => ts.transpileModule(fs.readFileSync(filename, 'utf8
 require.extensions['.ts'] = (module, filename) => module._compile(compile(filename), filename);
 const contact = require('../lib/anketa-contact.ts');
 const { ANKETA } = require('../lib/survey-anketa.ts');
-const answers = Object.fromEntries(ANKETA.questions.map(q => [q.id, q.kind === 'single' ? q.options[0].value : q.ranked ? ['cena', 'ergonomie', 'vyzkouseni', 'foto_baterie'] : [q.options[0].value]]));
+const answers = Object.fromEntries(ANKETA.questions.map(q => [q.id, q.kind === 'single' ? q.options[0].value : q.ranked ? ['cena', 'ergonomie_design', 'fotoaparaty', 'baterie'] : [q.options[0].value]]));
 
 function actionHarness() {
   const inserts = [];

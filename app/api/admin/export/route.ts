@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // One column per question; matrix questions get one column per row. Values are the labels people saw.
     const def = surveyByVersion(type === 'anketa' ? 'anketa' : undefined);
     const cols: { head: string; get: (a: Record<string, unknown>) => string }[] = [];
-    for (const q of def.questions) {
+    for (const q of [...def.questions, ...(def.archivedQuestions ?? [])]) {
       if (q.kind === 'matrix') {
         for (const r of q.rows) {
           cols.push({

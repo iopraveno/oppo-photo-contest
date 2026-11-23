@@ -502,6 +502,8 @@ export type SurveyDef = {
   /** Short name in the admin switch. */
   name: string;
   questions: Question[];
+  /** Retired questions: keep historical responses readable in tables and exports. */
+  archivedQuestions?: Question[];
   sections: Record<string, string>;
   open: readonly OpenQuestion[];
   /** Asks for an in-person meeting and e-mail at the end. */
