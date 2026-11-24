@@ -51,7 +51,7 @@ function tableColumns(questions: Question[]): TableColumn[] {
   });
 }
 
-const contactHref = (c: string) => (c.includes('@') ? `mailto:${c}` : `tel:${c.replace(/[^\d+]/g, '')}`);
+const contactHref = (c: string) => (c.includes('@') ? `mailto:${c}` : `tel:${c.replace(/[^\d+]/g, '')}`); // older rows may hold a phone
 
 function FilterSelect({ name, label, value, options }: { name: string; label: string; value?: string; options: { value: string; label: string }[] }) {
   return (
@@ -184,10 +184,10 @@ export default function Dashboard({
   const emailOnly = rows.filter((r) => !r.wants_meeting && r.email);
   // Phone-or-e-mail surveys keep the meeting contact in open_answers (the email column is the newsletter there)
   // and list everyone who left one, with their answer to the meeting question.
-  const meetContact = (r: SurveyResponse) => (def.meeting?.phoneOrEmail ? r.open_answers?.meet_contact : r.email) || '';
-  const contacts = def.meeting?.phoneOrEmail ? rows.filter((r) => r.open_answers?.meet_contact) : meeting;
-  const maybeCount = def.meeting?.phoneOrEmail ? contacts.filter((r) => !r.wants_meeting).length : emailOnly.length;
-  const meetingCount = def.meeting?.phoneOrEmail ? contacts.filter((r) => r.wants_meeting).length : meeting.length;
+  const meetContact = (r: SurveyResponse) => (def.meeting?.contactInOpenAnswers ? r.open_answers?.meet_contact : r.email) || '';
+  const contacts = def.meeting?.contactInOpenAnswers ? rows.filter((r) => r.open_answers?.meet_contact) : meeting;
+  const maybeCount = def.meeting?.contactInOpenAnswers ? contacts.filter((r) => !r.wants_meeting).length : emailOnly.length;
+  const meetingCount = def.meeting?.contactInOpenAnswers ? contacts.filter((r) => r.wants_meeting).length : meeting.length;
   const newsletterCount = rows.filter((r) => r.contact_consent && r.email).length;
   const mobile = rows.filter((r) => r.device === 'mobil').length;
   const med = median(rows.map((r) => r.duration_s).filter((d): d is number => typeof d === 'number'));
@@ -321,10 +321,10 @@ export default function Dashboard({
           {def.meeting && (
             <section className={s.section}>
               <h2 className={s.sectionTitle}>
-                {def.meeting.phoneOrEmail ? `Nechali kontakt kvůli setkání (${contacts.length})` : `Chtějí pozvat na osobní setkání (${contacts.length})`}
+                {def.meeting.contactInOpenAnswers ? `Nechali kontakt kvůli setkání (${contacts.length})` : `Chtějí pozvat na osobní setkání (${contacts.length})`}
               </h2>
               <p className="muted small">
-                {def.meeting.phoneOrEmail
+                {def.meeting.contactInOpenAnswers
                   ? 'Lidé, kteří chtějí na setkání nebo odpověděli „možná“, nechali kontakt a dali souhlas. Podle odpovědí si vyberte, koho pozvete.'
                   : 'Lidé, kteří chtějí na setkání a dali souhlas s kontaktováním. Podle odpovědí si vyberte, koho pozvete.'}
               </p>
@@ -335,8 +335,8 @@ export default function Dashboard({
                   <table className={s.table}>
                     <thead>
                       <tr>
-                        <th>{def.meeting.phoneOrEmail ? 'Kontakt' : 'E-mail'}</th>
-                        {def.meeting.phoneOrEmail && (
+                        <th>E-mail</th>
+                        {def.meeting.contactInOpenAnswers && (
                           <>
                             <th>Jméno</th>
                             <th>Setkání</th>
@@ -351,7 +351,7 @@ export default function Dashboard({
                       {contacts.map((r) => (
                         <tr key={r.id}>
                           <td><a href={contactHref(meetContact(r))}>{meetContact(r)}</a></td>
-                          {def.meeting!.phoneOrEmail && (
+                          {def.meeting!.contactInOpenAnswers && (
                             <>
                               <td>{r.open_answers?.contact_name ?? ''}</td>
                               <td>{r.wants_meeting ? <span className={s.yes}>Ano</span> : 'Možná'}</td>
@@ -373,7 +373,7 @@ export default function Dashboard({
                   </table>
                 </div>
               )}
-              {!def.meeting.phoneOrEmail && emailOnly.length > 0 && (
+              {!def.meeting.contactInOpenAnswers && emailOnly.length > 0 && (
                 <p className="small muted">
                   Dalších {emailOnly.length} lidí nechalo e-mail jen pro případné vyzkoušení. Najdete je v exportu CSV.
                 </p>
@@ -396,7 +396,7 @@ export default function Dashboard({
                     <th>Zařízení</th>
                     {columns.map((c) => <th key={c.key}>{c.head}</th>)}
                     {def.meeting && <th>Setkání</th>}
-                    {def.meeting?.phoneOrEmail && <th>Kontakt na setkání</th>}
+                    {def.meeting?.contactInOpenAnswers && <th>E-mail na setkání</th>}
                     {def.newsletter && (
                       <>
                         <th>E-mail pro novinky</th>
@@ -415,7 +415,7 @@ export default function Dashboard({
                         <td key={c.key} className={c.wrap ? s.wrapCell : undefined}>{c.get(r)}</td>
                       ))}
                       {def.meeting && <td>{r.wants_meeting ? <span className={s.yes}>Ano</span> : r.wants_meeting === false ? 'Ne' : ''}</td>}
-                      {def.meeting?.phoneOrEmail && <td>{r.open_answers?.meet_contact ?? ''}</td>}
+                      {def.meeting?.contactInOpenAnswers && <td>{r.open_answers?.meet_contact ?? ''}</td>}
                       {def.newsletter && (
                         <>
                           <td>{r.contact_consent ? r.email : ''}</td>

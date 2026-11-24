@@ -547,4 +547,4 @@ table.prizes .now { display: inline-block; margin-left: 10px; font-size: 14px; f
 
 /* Survey (/dotaznik) paints the whole page, overscroll included. Its own styles: app/dotaznik/survey.module.css */
 html:has([data-survey]), body:has([data-survey]) { background: #123b24; }
-html:has([data-anketa]), body:has([data-anketa]) { background: #f5f7f4; }
+html:has([data-anketa]), body:has([data-anketa]) { background: #f7f7f9; }

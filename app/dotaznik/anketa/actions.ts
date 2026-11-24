@@ -6,13 +6,13 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isDisposableEmail } from '@/lib/disposable';
 import { clientIp, hashIp } from '@/lib/security';
 import { cleanAnswers, cleanOpen, cleanSource } from '@/lib/survey';
-import { ANKETA, contactKind, otherKey } from '@/lib/survey-anketa';
+import { ANKETA, isMeetEmail, otherKey } from '@/lib/survey-anketa';
 import { ANKETA_CONSENT_TEXT, ANKETA_CONSENT_VERSION, cleanAnketaContact } from '@/lib/anketa-contact';
 
 export type AnketaInput = {
   answers: unknown;
   open?: unknown;
-  /** Meeting question: phone or e-mail, optional name, consent to be contacted about the meeting. */
+  /** Meeting question: e-mail, optional name, consent to be contacted about the meeting. */
   meetContact?: string;
   meetName?: string;
   meetConsent?: boolean;
@@ -48,18 +48,15 @@ export async function submitAnketa(input: AnketaInput): Promise<AnketaResult> {
     if (!picked) delete open[otherKey(q.id)];
   }
 
-  // Meeting contact: required for "yes", optional for "maybe", ignored otherwise.
+  // Meeting e-mail: required for "yes", optional for "maybe", ignored otherwise.
   const meet = typeof answers.meet === 'string' ? answers.meet : null;
-  const meetContact = meet === 'ano' || meet === 'mozna' ? String(input.meetContact || '').trim().slice(0, 120) : '';
-  const kind = meetContact ? contactKind(meetContact) : null;
-  if (meet === 'ano' && !meetContact) return { ok: false, error: 'Abychom vás mohli pozvat, nechte nám prosím telefon nebo e-mail.' };
-  if (meetContact) {
-    if (!kind) return { ok: false, error: 'Zkontrolujte prosím kontakt. Napište telefonní číslo nebo e-mail.' };
-    if (kind === 'email' && isDisposableEmail(meetContact.toLowerCase())) {
-      return { ok: false, error: 'Jednorázové e-maily nepodporujeme. Použijte prosím svůj běžný e-mail nebo telefon.' };
-    }
-    if (input.meetConsent !== true) return { ok: false, error: 'Bez souhlasu vás kvůli setkání nemůžeme kontaktovat. Zaškrtněte ho, nebo kontakt smažte.' };
-    open.meet_contact = kind === 'email' ? meetContact.toLowerCase() : meetContact;
+  const meetEmail = meet === 'ano' || meet === 'mozna' ? String(input.meetContact || '').trim().toLowerCase().slice(0, 120) : '';
+  if (meet === 'ano' && !meetEmail) return { ok: false, error: 'Abychom vás mohli pozvat, nechte nám prosím e-mail.' };
+  if (meetEmail) {
+    if (!isMeetEmail(meetEmail)) return { ok: false, error: 'Zkontrolujte prosím e-mail, takhle nevypadá platně.' };
+    if (isDisposableEmail(meetEmail)) return { ok: false, error: 'Jednorázové e-maily nepodporujeme. Použijte prosím svůj běžný e-mail.' };
+    if (input.meetConsent !== true) return { ok: false, error: 'Bez souhlasu vás kvůli setkání nemůžeme kontaktovat. Zaškrtněte ho, nebo e-mail smažte.' };
+    open.meet_contact = meetEmail;
     const name = String(input.meetName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
     if (name) open.contact_name = name;
     open.meet_consent_at = new Date().toISOString();

@@ -20,27 +20,26 @@ export default async function Image() {
     read('fonts/og/OPPOSans-700.ttf'),
     read('img/oppo-logo.png'),
   ]);
-  const H = 330;
-  const phone = (ratio: number, name: string, note: string) => (
+  // Same proportions as the page: about 72 x 148 mm next to 82 x 128 mm, bottom-aligned.
+  const MM = 2.2;
+  const phone = (wMm: number, hMm: number, name: string, note: string) => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div
         style={{
-          display: 'flex', width: Math.round(H / ratio), height: H, padding: 9,
-          border: '3px solid #0e1a13', borderRadius: 40, background: '#fff',
+          display: 'flex', justifyContent: 'center', width: Math.round(wMm * MM), height: Math.round(hMm * MM), paddingTop: 14,
+          border: '5px solid #3d3d4a', borderRadius: 30, background: 'linear-gradient(180deg, #ffffff 0%, #f3f5f4 100%)',
         }}
       >
-        <div style={{ display: 'flex', flex: 1, justifyContent: 'center', paddingTop: 20, borderRadius: 31, background: '#eaf3ec' }}>
-          <div style={{ width: 11, height: 11, borderRadius: 6, background: '#0e1a13' }} />
-        </div>
+        <div style={{ width: '26%', height: 7, borderRadius: 4, background: '#d8d8e0' }} />
       </div>
-      <div style={{ fontSize: 24, fontWeight: 700, marginTop: 22 }}>{name}</div>
-      <div style={{ fontSize: 21, fontWeight: 500, color: '#5b675f', marginTop: 2 }}>{note}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, marginTop: 20, color: '#1a1a1a' }}>{name}</div>
+      <div style={{ fontSize: 20, fontWeight: 500, color: '#5e5e6e', marginTop: 2 }}>{note}</div>
     </div>
   );
 
   return new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', background: '#f5f7f4', fontFamily: 'OPPO Sans', color: '#0e1a13' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', background: '#f7f7f9', fontFamily: 'OPPO Sans', color: '#0e1a13' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: 640, padding: '0 0 0 72px' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={dataUrl(logo, 'image/png')} alt="" height={28} style={{ height: 28, marginBottom: 56, alignSelf: 'flex-start' }} />
@@ -56,11 +55,11 @@ export default async function Image() {
           <div
             style={{
               display: 'flex', alignItems: 'flex-end', gap: 56, padding: '44px 52px 34px',
-              background: '#fff', border: '1.5px solid #dce3dd', borderRadius: 32,
+              background: 'linear-gradient(135deg, #f8fdfa 0%, #f2faf5 100%)', border: '2px solid #d4f0e0', borderRadius: 32,
             }}
           >
-            {phone(2.05, 'Běžný telefon', 'zhruba 20:9')}
-            {phone(1.55, 'Široký telefon', 'zhruba 16:10')}
+            {phone(72, 148, 'Běžný telefon', 'zhruba 20:9')}
+            {phone(82, 128, 'Široký telefon', 'zhruba 16:10')}
           </div>
         </div>
       </div>

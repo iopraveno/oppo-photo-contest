@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: ANKETA_TEXT.title, description: ANKETA_TEXT.description },
 };
 
-export const viewport: Viewport = { themeColor: '#f5f7f4' };
+export const viewport: Viewport = { themeColor: '#f7f7f9' };
 
 type Search = Promise<{ src?: string; utm_source?: string }>;
 

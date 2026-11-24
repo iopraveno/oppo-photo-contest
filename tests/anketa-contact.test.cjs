@@ -124,16 +124,16 @@ test('each branch keeps only its own questions', async () => {
   assert.equal(inserts[1].wants_meeting, null);
 });
 
-test('meeting contact: required for yes, needs its own consent, stays out of the newsletter columns', async () => {
+test('meeting e-mail: required for yes, e-mail only, needs its own consent, stays out of the newsletter columns', async () => {
   const { submit, inserts } = actionHarness();
   const yes = walk({ meet: 'ano' });
   assert.equal((await submit({ answers: yes })).ok, false);
-  assert.equal((await submit({ answers: yes, meetContact: '777 123 456' })).ok, false);
-  assert.equal((await submit({ answers: yes, meetContact: 'nonsense', meetConsent: true })).ok, false);
-  assert.deepEqual(await submit({ answers: yes, meetContact: '777 123 456', meetName: ' Jana  Nová ', meetConsent: true }), { ok: true });
+  assert.equal((await submit({ answers: yes, meetContact: 'jana@example.com' })).ok, false);
+  assert.equal((await submit({ answers: yes, meetContact: '777 123 456', meetConsent: true })).ok, false);
+  assert.deepEqual(await submit({ answers: yes, meetContact: ' Jana@Example.com ', meetName: ' Jana  Nová ', meetConsent: true }), { ok: true });
   const row = inserts[0];
   assert.equal(row.wants_meeting, true);
-  assert.equal(row.open_answers.meet_contact, '777 123 456');
+  assert.equal(row.open_answers.meet_contact, 'jana@example.com');
   assert.equal(row.open_answers.contact_name, 'Jana Nová');
   assert.equal(row.email, null);
   assert.equal(row.contact_consent, false);

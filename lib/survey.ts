@@ -513,10 +513,10 @@ export type MeetingDef = {
   /** Admin KPI label for people who left a contact without a clear yes. */
   maybeLabel: string;
   /**
-   * People leave a phone number or an e-mail and an optional name, kept in open_answers (meet_contact, contact_name),
+   * The meeting e-mail and an optional name are kept in open_answers (meet_contact, contact_name),
    * so the email column stays free for the newsletter opt-in.
    */
-  phoneOrEmail?: boolean;
+  contactInOpenAnswers?: boolean;
 };
 
 /** Everything the admin, the CSV export and the server check need to know about one survey. */

@@ -4,13 +4,18 @@
 import type { Answers, OpenQuestion, Option, Question, SurveyDef } from './survey';
 
 export const ANKETA_TEXT = {
+  tag: 'Krátký průzkum',
   title: 'Co říkáte na telefon se širším displejem?',
-  intro:
-    'Zajímá nás váš názor na nový typ smartphonu. Je to klasický telefon, který se neskládá, jen má širší displej než telefony, na které jsme dnes zvyklí.',
-  time: 'Většinou stačí klikat a zabere to 2-4 minuty. Odpovědi jsou anonymní.',
+  /** The intro is split so "širší displej" can be bold. */
+  intro: ['Zajímá nás váš názor na nový typ smartphonu. Je to klasický telefon, který se neskládá, jen má', 'širší displej', 'než telefony, na které jsme dnes zvyklí.'],
+  chips: ['10-18 otázek podle odpovědí', 'Zabere 2-4 minuty', 'Odpovědi jsou anonymní'],
+  formatLabel: 'Srovnání formátů',
+  formatWarn: 'Není to skládací telefon',
+  formatNoteLead: 'Ani jeden z telefonů se neskládá.',
   formatNote:
-    'Ani jeden z telefonů se neskládá. Široký telefon má displej v poměru zhruba 16:10 nebo 16:9, běžné telefony kolem 20:9. Obrázek ukazuje jen rozdíl v šířce, ne skutečnou velikost.',
-  start: 'Přejít k otázkám',
+    'Široký telefon je nižší a o něco širší, displej má v poměru zhruba 16:10 nebo 16:9. Běžné telefony mají kolem 20:9. Obrázek ukazuje přibližné proporce, ne skutečnou velikost.',
+  footerNote: 'Děkujeme! Odpovědi použijeme jen k tomuto průzkumu a vyhodnotíme je souhrnně.',
+  submit: 'Odeslat dotazník',
   thanksTitle: 'Děkujeme za vaše odpovědi',
   thanks: 'Pomůžou nám pochopit, jaký telefon lidé v Česku opravdu chtějí.',
   thanksContact: 'Kvůli setkání se vám ozveme na kontakt, který jste nám nechali.',
@@ -111,7 +116,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     short: 'Zdroje informací (pořadí)',
     kind: 'rank',
     title: 'Kde hledáte informace o telefonech? Seřaďte zdroje podle toho, jak jsou pro vás důležité.',
-    help: 'Vybírejte od nejdůležitějšího, čísla se doplní sama. Stačí zdroje, které opravdu používáte.',
+    help: 'Klikejte od nejdůležitějšího, čísla se doplní sama. Stačí zdroje, které opravdu používáte, dalším kliknutím výběr zrušíte.',
     options: CHANNELS,
     check: { id: 'operator_call', short: 'Volal operátor', label: 'Už mi někdy volal operátor s nabídkou nového telefonu' },
   },
@@ -498,13 +503,8 @@ const OPEN: OpenQuestion[] = [
   ),
 ];
 
-/** Phone number or e-mail typed at the meeting question. */
-export function contactKind(raw: string): 'email' | 'phone' | null {
-  const v = raw.trim();
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'email';
-  if (/^\+?\d{9,15}$/.test(v.replace(/[\s\-().]/g, ''))) return 'phone';
-  return null;
-}
+/** E-mail typed at the meeting question. */
+export const isMeetEmail = (raw: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw.trim());
 
 export const ANKETA: SurveyDef = {
   slug: 'wide-2026-anketa-2',
@@ -526,7 +526,7 @@ export const ANKETA: SurveyDef = {
   meeting: {
     cols: ['age', 'aware', 'interest', 'interest_after', 'brand_now'],
     maybeLabel: 'odpovědělo „možná“ a nechalo kontakt',
-    phoneOrEmail: true,
+    contactInOpenAnswers: true,
   },
   newsletter: true,
   filters: ['aware', 'interest', 'age'],

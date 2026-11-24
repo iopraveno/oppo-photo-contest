@@ -43,14 +43,14 @@ export async function GET(request: NextRequest) {
         if (check) cols.push({ head: check.short, get: (a) => (a[check.id] === 'ano' ? 'ano' : a[check.id] === 'ne' ? 'ne' : '') });
       }
     }
-    const contactName = Boolean(def.meeting?.phoneOrEmail);
+    const contactName = Boolean(def.meeting?.contactInOpenAnswers);
     const responses = ((await listResponses(def.slug)) ?? []).slice().reverse();
     body = csv([
       [
         'odeslano', 'zdroj', 'zarizeni', 'doba_s', ...cols.map((c) => c.head), ...def.open.map((o) => o.label),
         ...(def.meeting
           ? contactName
-            ? ['chce_na_setkani', 'kontakt_setkani', 'jmeno', 'souhlas_setkani_cas']
+            ? ['chce_na_setkani', 'email_setkani', 'jmeno', 'souhlas_setkani_cas']
             : ['chce_na_setkani', 'email', 'souhlas']
           : []),
         ...(def.newsletter ? ['email_novinky', 'souhlas_novinky', 'souhlas_novinky_cas', 'souhlas_novinky_verze', 'souhlas_novinky_text'] : []),

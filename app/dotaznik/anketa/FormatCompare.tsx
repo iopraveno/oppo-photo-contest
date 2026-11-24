@@ -1,26 +1,34 @@
-// A regular phone next to the wide one, same height, so the difference reads as width. Plain outlines, no brand.
+// Regular phone next to the wide one, in rough real proportions (about 72 x 148 mm and 82 x 128 mm):
+// the wide one is lower and a bit wider. Plain outlines, no brand.
+import { ANKETA_TEXT } from '@/lib/survey-anketa';
 import s from './anketa.module.css';
 
-export default function FormatCompare({ note }: { note: string }) {
+export default function FormatCompare({ cz }: { cz: (text: string) => string }) {
   return (
-    <figure className={s.compare}>
+    <figure className={s.figureWrap}>
+      <div className={s.figureLabel}>
+        {ANKETA_TEXT.formatLabel}
+        <span className={s.warn}>{ANKETA_TEXT.formatWarn}</span>
+      </div>
       <div className={s.phones}>
-        <div className={s.phoneCol}>
-          <div className={`${s.phone} ${s.phoneRegular}`} aria-hidden>
-            <span className={s.screen} />
+        <div className={s.phone}>
+          <div className={`${s.body} ${s.regular}`} aria-hidden />
+          <div className={s.caption}>
+            <div className={s.name}>Běžný telefon</div>
+            <div className={s.ratio}>zhruba 20:9</div>
           </div>
-          <p className={s.phoneName}>Běžný telefon</p>
-          <p className={s.phoneRatio}>zhruba 20:9</p>
         </div>
-        <div className={s.phoneCol}>
-          <div className={`${s.phone} ${s.phoneWide}`} aria-hidden>
-            <span className={s.screen} />
+        <div className={s.phone}>
+          <div className={`${s.body} ${s.wide}`} aria-hidden />
+          <div className={s.caption}>
+            <div className={s.name}>Široký telefon</div>
+            <div className={s.ratio}>zhruba 16:10</div>
           </div>
-          <p className={s.phoneName}>Široký telefon</p>
-          <p className={s.phoneRatio}>zhruba 16:10</p>
         </div>
       </div>
-      <figcaption className={s.compareNote}>{note}</figcaption>
+      <figcaption className={s.figureNote}>
+        <strong>{ANKETA_TEXT.formatNoteLead}</strong> {cz(ANKETA_TEXT.formatNote)}
+      </figcaption>
     </figure>
   );
 }
