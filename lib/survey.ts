@@ -513,7 +513,7 @@ export type MeetingDef = {
   /** Admin KPI label for people who left a contact without a clear yes. */
   maybeLabel: string;
   /**
-   * The meeting e-mail and an optional name are kept in open_answers (meet_contact, contact_name),
+   * The meeting e-mail is kept in open_answers (meet_contact, meet_consent_at),
    * so the email column stays free for the newsletter opt-in.
    */
   contactInOpenAnswers?: boolean;

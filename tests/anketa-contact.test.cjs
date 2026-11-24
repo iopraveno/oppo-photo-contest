@@ -130,16 +130,21 @@ test('meeting e-mail: required for yes, e-mail only, needs its own consent, stay
   assert.equal((await submit({ answers: yes })).ok, false);
   assert.equal((await submit({ answers: yes, meetContact: 'jana@example.com' })).ok, false);
   assert.equal((await submit({ answers: yes, meetContact: '777 123 456', meetConsent: true })).ok, false);
-  assert.deepEqual(await submit({ answers: yes, meetContact: ' Jana@Example.com ', meetName: ' Jana  Nová ', meetConsent: true }), { ok: true });
+  assert.deepEqual(await submit({ answers: yes, meetContact: ' Jana@Example.com ', meetName: 'Jana', meetConsent: true }), { ok: true });
   const row = inserts[0];
   assert.equal(row.wants_meeting, true);
   assert.equal(row.open_answers.meet_contact, 'jana@example.com');
-  assert.equal(row.open_answers.contact_name, 'Jana Nová');
+  assert.equal(row.open_answers.contact_name, undefined); // no name is collected
+  // One e-mail can serve both purposes, each with its own consent.
+  assert.deepEqual(await submit({ answers: yes, meetContact: 'jana@example.com', meetConsent: true, newsletter: true, email: 'jana@example.com', consent: true }), { ok: true });
+  assert.equal(inserts[1].open_answers.meet_contact, 'jana@example.com');
+  assert.equal(inserts[1].email, 'jana@example.com');
+  assert.equal(inserts[1].contact_consent, true);
   assert.equal(row.email, null);
   assert.equal(row.contact_consent, false);
   // "Raději ne" ignores a contact typed earlier.
   assert.deepEqual(await submit({ answers: walk({ meet: 'ne' }), meetContact: 'a@b.cz', meetConsent: true }), { ok: true });
-  assert.equal(inserts[1].open_answers.meet_contact, undefined);
+  assert.equal(inserts[2].open_answers.meet_contact, undefined);
 });
 
 test('"something else" text is kept only when that option is picked', async () => {

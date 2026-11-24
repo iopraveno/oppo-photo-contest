@@ -14,11 +14,9 @@ const DRAFT_KEY = `oppo-anketa-${ANKETA.slug}`;
 const DONE_KEY = `${DRAFT_KEY}-hotovo`;
 
 type Open = Record<string, string>;
-type Meet = { email: string; name: string; consent: boolean };
-// Contact details and consents stay in memory only, never in the browser draft.
+// The e-mail and both consents stay in memory only, never in the browser draft.
 type Draft = { answers: Answers; open: Open; reached: number; startedAt: number };
 
-const NO_MEET: Meet = { email: '', name: '', consent: false };
 const BY_ID = new Map(ANKETA.questions.map((q) => [q.id, q]));
 
 const store = {
@@ -160,10 +158,10 @@ function Rank({
 export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string | null }) {
   const [answers, setAnswers] = useState<Answers>({});
   const [open, setOpen] = useState<Open>({});
-  const [meet, setMeet] = useState<Meet>(NO_MEET);
-  const [newsletter, setNewsletter] = useState(false);
+  // One e-mail at the end, used for whatever the person ticks: the meeting invitation, the newsletter, or both.
   const [email, setEmail] = useState('');
-  const [consent, setConsent] = useState(false);
+  const [invite, setInvite] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const [startedAt, setStartedAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -223,13 +221,25 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
   // Everything is open: both branching questions answered and the closing message reached.
   const finished = flow.includes(MESSAGE.id) && reached >= flow.length;
 
-  const meetEmailOk = isMeetEmail(meet.email);
-  const meetReady =
-    answers.meet === 'ano' ? meetEmailOk && meet.consent : answers.meet === 'mozna' ? !meet.email.trim() || (meetEmailOk && meet.consent) : true;
-  const newsletterError = newsletter ? cleanAnketaContact({ newsletter: true, email, consent }).error : undefined;
+  const canInvite = wantsMeeting(answers.meet);
+  const emailOk = isMeetEmail(email);
+  const typed = Boolean(email.trim());
+  const sendInvite = canInvite && invite;
+  /** What is wrong with the e-mail block at the end, if anything. */
+  const contactError =
+    answers.meet === 'ano' && !sendInvite
+      ? 'Pro pozvánku na setkání vyplňte e-mail a zaškrtněte, že ji chcete poslat.'
+      : (sendInvite || newsletter) && !typed
+        ? 'Vyplňte prosím e-mail.'
+        : (sendInvite || newsletter) && !emailOk
+          ? 'Zkontrolujte prosím e-mail, takhle nevypadá platně.'
+          : typed && !sendInvite && !newsletter
+            ? 'Zaškrtněte, k čemu můžeme e-mail použít, nebo ho smažte.'
+            : newsletter
+              ? cleanAnketaContact({ newsletter: true, email, consent: true }).error
+              : undefined;
   // A question marked as missing turns back to normal as soon as it is complete.
-  const complete = (id: string) =>
-    id === 'newsletter' ? !newsletterError : id === 'meet' ? isAnswered(BY_ID.get(id)!, answers[id]) && meetReady : !BY_ID.has(id) || isAnswered(BY_ID.get(id)!, answers[id]);
+  const complete = (id: string) => (id === 'contact' ? !contactError : !BY_ID.has(id) || isAnswered(BY_ID.get(id)!, answers[id]));
   const flagged = (id: string) => missing === id && !complete(id);
 
   const reveal = (count: number) => {
@@ -248,21 +258,14 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
     setAnswers(next);
     setError('');
     if (changedAt < reachedRef.current) setReachedTo(changedAt);
-    // Single choice moves on by itself, except when the meeting answer opens the e-mail field.
-    if (q.kind === 'single' && !(q.id === 'meet' && wantsMeeting(v))) setTimeout(() => reveal(i + 2), reducedMotion() ? 0 : 280);
+    // Single choice moves on by itself; multiple choice and ranking wait for the button.
+    if (q.kind === 'single') setTimeout(() => reveal(i + 2), reducedMotion() ? 0 : 280);
   };
 
   const setCheck = (id: string, on: boolean) => {
     const next = { ...answersRef.current, [id]: on ? 'ano' : 'ne' };
     answersRef.current = next;
     setAnswers(next);
-  };
-
-  const toggleNewsletter = (on: boolean) => {
-    setNewsletter(on);
-    setError('');
-    // The meeting e-mail is the likely newsletter address too; the person can still change it.
-    if (on && !email && meetEmailOk) setEmail(meet.email.trim());
   };
 
   const jumpTo = (id: string, message: string) => {
@@ -277,15 +280,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
     const gap = questionIds.findIndex((id) => !isAnswered(BY_ID.get(id)!, answers[id]));
     if (gap > -1) return jumpTo(questionIds[gap], `Chybí odpověď u otázky ${flow.indexOf(questionIds[gap]) + 1}.`);
     if (!finished) return;
-    if (!meetReady) {
-      return jumpTo(
-        'meet',
-        meet.email.trim() && !meetEmailOk
-          ? 'Zkontrolujte prosím e-mail u otázky na setkání.'
-          : 'U otázky na setkání chybí e-mail nebo souhlas s kontaktováním.',
-      );
-    }
-    if (newsletterError) return jumpTo('newsletter', newsletterError);
+    if (contactError) return jumpTo('contact', contactError);
 
     setBusy(true);
     setError('');
@@ -300,14 +295,14 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
       if (open[otherKey(id)]) sentOpen[otherKey(id)] = open[otherKey(id)];
     }
     if (open[MESSAGE.id]?.trim()) sentOpen[MESSAGE.id] = open[MESSAGE.id];
-    const withContact = wantsMeeting(answers.meet) && Boolean(meet.email.trim());
+    const withContact = sendInvite;
     const res = await submitAnketa({
       answers: sentAnswers,
       open: sentOpen,
-      ...(withContact ? { meetContact: meet.email, meetName: meet.name, meetConsent: meet.consent } : {}),
+      ...(sendInvite ? { meetContact: email, meetConsent: true } : {}),
       newsletter,
       email: newsletter ? email : '',
-      consent: newsletter && consent,
+      consent: newsletter,
       src,
       startedAt,
       website: honeypot.current?.value || '',
@@ -418,54 +413,12 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                     />
                   )}
 
-                  {id === 'meet' && wantsMeeting(value) && (
-                    <div className={s.contactFields}>
-                      <div>
-                        <label htmlFor="meet-email">E-mail{value === 'mozna' ? ' (nepovinné)' : ''}</label>
-                        <input
-                          id="meet-email"
-                          type="email"
-                          inputMode="email"
-                          autoComplete="email"
-                          maxLength={120}
-                          placeholder="vas@email.cz"
-                          value={meet.email}
-                          onChange={(e) => setMeet((m) => ({ ...m, email: e.target.value }))}
-                        />
-                        {value === 'mozna' && <p className={s.fieldHint}>Když ho vyplníte, dáme vám vědět, až budeme znát termín.</p>}
-                      </div>
-                      <div>
-                        <label htmlFor="meet-name">Jméno (nepovinné)</label>
-                        <input
-                          id="meet-name"
-                          autoComplete="name"
-                          maxLength={80}
-                          placeholder="Vaše jméno"
-                          value={meet.name}
-                          onChange={(e) => setMeet((m) => ({ ...m, name: e.target.value }))}
-                        />
-                      </div>
-                      {meet.email.trim().length >= 5 && !meetEmailOk && <p className={s.fieldError}>Takhle e-mail nevypadá, zkontrolujte ho prosím.</p>}
-                      {meet.email.trim() && (
-                        <label className={s.consent}>
-                          <input type="checkbox" checked={meet.consent} onChange={(e) => setMeet((m) => ({ ...m, consent: e.target.checked }))} />
-                          <span>
-                            {cz(ANKETA_TEXT.consent)}{' '}
-                            <a href="/ochrana-osobnich-udaju#dotaznik" target="_blank" rel="noopener">
-                              Ochrana osobních údajů
-                            </a>
-                          </span>
-                        </label>
-                      )}
-                    </div>
-                  )}
-
-                  {current && (q.kind === 'multi' || q.kind === 'rank' || (id === 'meet' && wantsMeeting(value))) && (
+                  {current && (q.kind === 'multi' || q.kind === 'rank') && (
                     <div className={s.nextRow}>
                       <button
                         type="button"
                         className={s.nextBtn}
-                        disabled={id === 'meet' ? !meetReady : !isAnswered(q, value)}
+                        disabled={!isAnswered(q, value)}
                         onClick={() => reveal(i + 2)}
                       >
                         Další otázka
@@ -479,50 +432,54 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
             {finished && (
               <section
                 ref={(el) => {
-                  blocks.current.newsletter = el;
+                  blocks.current.contact = el;
                 }}
-                className={`${s.questionBlock} ${s.reveal} ${flagged('newsletter') ? s.questionMissing : ''}`}
-                aria-labelledby="newsletter-title"
+                className={`${s.questionBlock} ${s.reveal} ${flagged('contact') ? s.questionMissing : ''}`}
+                aria-labelledby="contact-title"
               >
                 <div className={s.qHeader}>
                   <span className={s.qNumber} aria-hidden />
-                  <h2 id="newsletter-title" className={s.qText}>{cz('Chcete být s OPPO v obraze?')}</h2>
+                  <h2 id="contact-title" className={s.qText}>
+                    {answers.meet === 'ano' ? 'Kam vám můžeme poslat pozvánku?' : 'Necháte nám e-mail?'}
+                  </h2>
                 </div>
-                <div className={s.options}>
-                  <label className={`${s.option} ${newsletter ? s.optionOn : ''}`}>
-                    <input type="checkbox" checked={newsletter} onChange={(e) => toggleNewsletter(e.target.checked)} />
-                    <span className={s.optText}>{cz('Ano, občas mi pošlete novinky o telefonech OPPO, tipy a pozvánky')}</span>
-                  </label>
-                </div>
-                {newsletter && (
-                  <div className={s.contactFields}>
-                    <div>
-                      <label htmlFor="newsletter-email">E-mail pro novinky</label>
-                      <input
-                        id="newsletter-email"
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        maxLength={120}
-                        placeholder="vas@email.cz"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          setError('');
-                        }}
-                      />
-                    </div>
+                <div className={s.contactFields}>
+                  <div>
+                    <label htmlFor="contact-email">E-mail{answers.meet === 'ano' ? '' : ' (nepovinné)'}</label>
+                    <input
+                      id="contact-email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      maxLength={120}
+                      placeholder="vas@email.cz"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setError('');
+                      }}
+                    />
+                  </div>
+                  {canInvite && (
                     <label className={s.consent}>
-                      <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                      <input type="checkbox" checked={invite} onChange={(e) => setInvite(e.target.checked)} />
                       <span>
-                        {cz(ANKETA_CONSENT_TEXT)}{' '}
-                        <a href="/ochrana-osobnich-udaju#novinky" target="_blank" rel="noopener noreferrer">
-                          Ochrana osobních údajů
-                        </a>
+                        <b className={s.consentTitle}>Pošlete mi pozvánku na setkání.</b> {cz(ANKETA_TEXT.consent)}
                       </span>
                     </label>
-                  </div>
-                )}
+                  )}
+                  <label className={s.consent}>
+                    <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
+                    <span>
+                      <b className={s.consentTitle}>Posílejte mi novinky OPPO.</b> {cz(ANKETA_CONSENT_TEXT)}
+                    </span>
+                  </label>
+                  <p className={s.fieldHint}>
+                    <a href="/ochrana-osobnich-udaju#dotaznik" target="_blank" rel="noopener noreferrer">
+                      Ochrana osobních údajů
+                    </a>
+                  </p>
+                </div>
               </section>
             )}
 

@@ -442,7 +442,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     title: 'Chtěli byste si s námi o tomhle tématu popovídat osobně?',
     lead: 'Jsme Jswin, oficiální distributor OPPO pro Českou republiku. Rádi bychom široké telefony probrali s některými z vás i naživo.',
     options: [
-      { value: 'ano', label: 'Ano, nechám vám e-mail' },
+      { value: 'ano', label: 'Ano, pozvěte mě' },
       { value: 'mozna', label: 'Možná, záleží na tom, kdy to bude' },
       { value: 'ne', label: 'Raději ne' },
     ],

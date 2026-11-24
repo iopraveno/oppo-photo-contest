@@ -217,7 +217,8 @@
 .fieldError { margin: 0; color: var(--err); font-size: 0.8rem; }
 .consent { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 0.8rem; line-height: 1.5; cursor: pointer; }
 .consent input { flex-shrink: 0; margin: 3px 0 0; accent-color: var(--dark-green); }
-.consent a { color: var(--dark-green); }
+.consent a, .fieldHint a { color: var(--dark-green); }
+.consentTitle { color: var(--ink); font-weight: 700; }
 
 /* ---------- Footer ---------- */
 .surveyFooter {

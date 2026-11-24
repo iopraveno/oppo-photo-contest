@@ -160,8 +160,7 @@ export default function PrivacyPage() {
           chtějí. Základem je náš oprávněný zájem (čl. 6 odst. 1 písm. f) GDPR).
         </p>
         <p>
-          Kontakt je nepovinný a ukládáme ho jen se tvým souhlasem (čl. 6 odst. 1 písm. a) GDPR). V dotazníku je to e-mail, v anketě
-          e-mail a případně jméno. Ozveme se ti jen kvůli tomuto průzkumu: s pozvánkou na osobní setkání, pokud o ni
+          Kontakt je nepovinný a ukládáme ho jen se tvým souhlasem (čl. 6 odst. 1 písm. a) GDPR). V dotazníku i v anketě je to e-mail. Ozveme se ti jen kvůli tomuto průzkumu: s pozvánkou na osobní setkání, pokud o ni
           stojíš, nebo s nabídkou vyzkoušení. Souhlas můžeš kdykoli odvolat na {mail}. Kontakt smažeme po skončení průzkumu, odpovědi
           bez kontaktu si můžeme ponechat pro další vyhodnocení. Lidem mladším 18 let kontaktní údaje vůbec nenabízíme.
         </p>

@@ -12,9 +12,8 @@ import { ANKETA_CONSENT_TEXT, ANKETA_CONSENT_VERSION, cleanAnketaContact } from 
 export type AnketaInput = {
   answers: unknown;
   open?: unknown;
-  /** Meeting question: e-mail, optional name, consent to be contacted about the meeting. */
+  /** E-mail for the meeting invitation and consent to be contacted about it. */
   meetContact?: string;
-  meetName?: string;
   meetConsent?: boolean;
   /** Optional OPPO newsletter at the end, with its own consent. */
   newsletter?: boolean;
@@ -57,8 +56,6 @@ export async function submitAnketa(input: AnketaInput): Promise<AnketaResult> {
     if (isDisposableEmail(meetEmail)) return { ok: false, error: 'Jednorázové e-maily nepodporujeme. Použijte prosím svůj běžný e-mail.' };
     if (input.meetConsent !== true) return { ok: false, error: 'Bez souhlasu vás kvůli setkání nemůžeme kontaktovat. Zaškrtněte ho, nebo e-mail smažte.' };
     open.meet_contact = meetEmail;
-    const name = String(input.meetName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
-    if (name) open.contact_name = name;
     open.meet_consent_at = new Date().toISOString();
   }
 

@@ -321,11 +321,11 @@ export default function Dashboard({
           {def.meeting && (
             <section className={s.section}>
               <h2 className={s.sectionTitle}>
-                {def.meeting.contactInOpenAnswers ? `Nechali kontakt kvůli setkání (${contacts.length})` : `Chtějí pozvat na osobní setkání (${contacts.length})`}
+                {def.meeting.contactInOpenAnswers ? `Nechali e-mail kvůli setkání (${contacts.length})` : `Chtějí pozvat na osobní setkání (${contacts.length})`}
               </h2>
               <p className="muted small">
                 {def.meeting.contactInOpenAnswers
-                  ? 'Lidé, kteří chtějí na setkání nebo odpověděli „možná“, nechali kontakt a dali souhlas. Podle odpovědí si vyberte, koho pozvete.'
+                  ? 'Lidé, kteří chtějí na setkání nebo odpověděli „možná“, nechali e-mail a dali souhlas. Podle odpovědí si vyberte, koho pozvete.'
                   : 'Lidé, kteří chtějí na setkání a dali souhlas s kontaktováním. Podle odpovědí si vyberte, koho pozvete.'}
               </p>
               {contacts.length === 0 ? (
@@ -336,12 +336,7 @@ export default function Dashboard({
                     <thead>
                       <tr>
                         <th>E-mail</th>
-                        {def.meeting.contactInOpenAnswers && (
-                          <>
-                            <th>Jméno</th>
-                            <th>Setkání</th>
-                          </>
-                        )}
+                        {def.meeting.contactInOpenAnswers && <th>Setkání</th>}
                         <th>Odesláno</th>
                         {def.meeting.cols.map((id) => <th key={id}>{q(id)?.short ?? id}</th>)}
                         <th>Zdroj</th>
@@ -351,12 +346,7 @@ export default function Dashboard({
                       {contacts.map((r) => (
                         <tr key={r.id}>
                           <td><a href={contactHref(meetContact(r))}>{meetContact(r)}</a></td>
-                          {def.meeting!.contactInOpenAnswers && (
-                            <>
-                              <td>{r.open_answers?.contact_name ?? ''}</td>
-                              <td>{r.wants_meeting ? <span className={s.yes}>Ano</span> : 'Možná'}</td>
-                            </>
-                          )}
+                          {def.meeting!.contactInOpenAnswers && <td>{r.wants_meeting ? <span className={s.yes}>Ano</span> : 'Možná'}</td>}
                           <td>{when(r.created_at)}</td>
                           {def.meeting!.cols.map((id) => {
                             const x = q(id);

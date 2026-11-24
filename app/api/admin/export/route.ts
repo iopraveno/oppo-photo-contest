@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         'odeslano', 'zdroj', 'zarizeni', 'doba_s', ...cols.map((c) => c.head), ...def.open.map((o) => o.label),
         ...(def.meeting
           ? contactName
-            ? ['chce_na_setkani', 'email_setkani', 'jmeno', 'souhlas_setkani_cas']
+            ? ['chce_na_setkani', 'email_setkani', 'souhlas_setkani_cas']
             : ['chce_na_setkani', 'email', 'souhlas']
           : []),
         ...(def.newsletter ? ['email_novinky', 'souhlas_novinky', 'souhlas_novinky_cas', 'souhlas_novinky_verze', 'souhlas_novinky_text'] : []),
@@ -64,7 +64,6 @@ export async function GET(request: NextRequest) {
             ? [
                 r.wants_meeting === true ? 'ano' : r.wants_meeting === false ? 'ne' : '',
                 r.open_answers?.meet_contact ?? '',
-                r.open_answers?.contact_name ?? '',
                 r.open_answers?.meet_consent_at ?? '',
               ]
             : [r.wants_meeting === true ? 'ano' : r.wants_meeting === false ? 'ne' : '', r.email ?? '', r.contact_consent ? 'ano' : '']
