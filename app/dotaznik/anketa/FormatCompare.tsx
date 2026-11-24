@@ -1,15 +1,10 @@
 // Regular phone next to the wide one, in rough real proportions (about 72 x 148 mm and 82 x 128 mm):
 // the wide one is lower and a bit wider. Plain outlines, no brand.
-import { ANKETA_TEXT } from '@/lib/survey-anketa';
 import s from './anketa.module.css';
 
-export default function FormatCompare({ cz }: { cz: (text: string) => string }) {
+export default function FormatCompare() {
   return (
-    <figure className={s.figureWrap}>
-      <div className={s.figureLabel}>
-        {ANKETA_TEXT.formatLabel}
-        <span className={s.warn}>{ANKETA_TEXT.formatWarn}</span>
-      </div>
+    <figure className={s.figureWrap} aria-label="Běžný telefon v poměru zhruba 20:9 vedle nižšího a širšího telefonu v poměru zhruba 16:10">
       <div className={s.phones}>
         <div className={s.phone}>
           <div className={`${s.body} ${s.regular}`} aria-hidden />
@@ -26,9 +21,6 @@ export default function FormatCompare({ cz }: { cz: (text: string) => string }) 
           </div>
         </div>
       </div>
-      <figcaption className={s.figureNote}>
-        <strong>{ANKETA_TEXT.formatNoteLead}</strong> {cz(ANKETA_TEXT.formatNote)}
-      </figcaption>
     </figure>
   );
 }

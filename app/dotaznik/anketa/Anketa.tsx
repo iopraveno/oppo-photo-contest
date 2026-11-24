@@ -290,45 +290,27 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
         {done ? (
           <div className={s.surveyHeader}>
             {logo}
-            <div className={s.tag}>Hotovo</div>
             <h1 className={s.h1}>{ANKETA_TEXT.thanksTitle}</h1>
-            <div className={s.intro}>
+            <p className={s.intro}>
               {cz(ANKETA_TEXT.thanks)}
-              {done.contact && (
-                <>
-                  {' '}
-                  <strong>{cz(ANKETA_TEXT.thanksContact)}</strong>
-                </>
-              )}
-            </div>
+              {done.contact && ` ${cz(ANKETA_TEXT.thanksContact)}`}
+            </p>
           </div>
         ) : (
           <>
             <header className={s.surveyHeader}>
               {logo}
-              <div className={s.tag}>{ANKETA_TEXT.tag}</div>
               <h1 className={s.h1}>{cz(ANKETA_TEXT.title)}</h1>
-              <div className={s.intro}>
-                {cz(ANKETA_TEXT.intro[0])} <strong>{ANKETA_TEXT.intro[1]}</strong> {cz(ANKETA_TEXT.intro[2])}
-              </div>
-              <div className={s.metaBar}>
-                {ANKETA_TEXT.chips.map((c) => (
-                  <span key={c} className={s.chip}>{c}</span>
-                ))}
-              </div>
+              <p className={s.intro}>{cz(ANKETA_TEXT.intro)}</p>
             </header>
 
-            <FormatCompare cz={cz} />
+            <FormatCompare />
 
             {flow.map((id, i) => {
               const ref = (el: HTMLElement | null) => {
                 blocks.current[id] = el;
               };
-              const number = (
-                <span className={s.qNumber} aria-label={`Otázka ${i + 1} z ${pathLength}`}>
-                  {i + 1}/{pathLength}
-                </span>
-              );
+              const number = <span className={s.qNumber}>{i + 1}.</span>;
 
               if (id === MESSAGE.id) {
                 return (
@@ -339,7 +321,6 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                         <label htmlFor="anketa-message">{cz(MESSAGE.label)}</label>
                       </h2>
                     </div>
-                    <p className={s.qHint}>Nepovinné.</p>
                     <div className={s.indent}>
                       <textarea
                         id="anketa-message"
@@ -403,9 +384,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                           value={meet.email}
                           onChange={(e) => setMeet((m) => ({ ...m, email: e.target.value }))}
                         />
-                        <p className={s.fieldHint}>
-                          {value === 'ano' ? 'Pošleme vám pozvánku s termínem a místem.' : 'Když ho vyplníte, dáme vám vědět, až budeme znát termín.'}
-                        </p>
+                        {value === 'mozna' && <p className={s.fieldHint}>Když ho vyplníte, dáme vám vědět, až budeme znát termín.</p>}
                       </div>
                       <div>
                         <label htmlFor="meet-name">Jméno (nepovinné)</label>
@@ -445,7 +424,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                 aria-labelledby="newsletter-title"
               >
                 <div className={s.qHeader}>
-                  <span className={s.qOptional}>Nepovinné</span>
+                  <span className={s.qNumber} aria-hidden />
                   <h2 id="newsletter-title" className={s.qText}>{cz('Chcete být s OPPO v obraze?')}</h2>
                 </div>
                 <div className={s.options}>
@@ -487,7 +466,6 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
             )}
 
             <footer className={s.surveyFooter}>
-              <p className={s.note}>{cz(ANKETA_TEXT.footerNote)}</p>
               <button type="button" className={s.submitBtn} disabled={busy} onClick={submit}>
                 {busy ? 'Odesílám…' : ANKETA_TEXT.submit}
               </button>

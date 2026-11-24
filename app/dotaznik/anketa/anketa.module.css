@@ -1,4 +1,4 @@
-/* /dotaznik/anketa: the look of the original brief (one white card, tag, intro box, format comparison, numbered questions). */
+/* /dotaznik/anketa: the look of the original brief (one white card, intro box, format comparison, numbered questions), without its badges. */
 
 .root {
   --green: #2a9d5c;
@@ -41,20 +41,9 @@
 /* ---------- Header ---------- */
 .surveyHeader { margin-bottom: 28px; }
 .logo { display: block; height: 16px; width: auto; margin-bottom: 26px; }
-.tag {
-  display: inline-block;
-  margin-bottom: 14px;
-  padding: 5px 16px;
-  border: 1px solid var(--mint);
-  border-radius: 100px;
-  background: var(--light-green);
-  color: var(--dark-green);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
 .h1 { margin: 0 0 12px; font-size: 1.9rem; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; }
 .intro {
+  margin: 0;
   padding: 16px 20px;
   border: 1px solid var(--card-border);
   border-radius: 16px;
@@ -62,18 +51,6 @@
   color: var(--muted);
   font-size: 0.95rem;
   line-height: 1.6;
-}
-.intro strong { color: var(--dark-green); font-weight: 700; }
-.metaBar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-.chip {
-  display: inline-flex; align-items: center;
-  padding: 5px 14px;
-  border: 1px solid var(--card-border);
-  border-radius: 100px;
-  background: #fff;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 600;
 }
 
 /* ---------- Format comparison ---------- */
@@ -83,24 +60,6 @@
   border: 1px solid var(--mint);
   border-radius: 20px;
   background: linear-gradient(135deg, #f8fdfa 0%, #f2faf5 100%);
-}
-.figureLabel {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-  margin-bottom: 14px;
-  color: var(--dark-green);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-}
-.warn {
-  padding: 2px 10px;
-  border: 1px solid var(--amber-border);
-  border-radius: 60px;
-  background: var(--amber-bg);
-  color: var(--amber);
-  font-size: 0.65rem;
-  letter-spacing: 0.5px;
 }
 /* Bottom-aligned, so the wide phone reads as lower and wider. Sizes follow about 72 x 148 mm and 82 x 128 mm. */
 .phones { display: flex; align-items: flex-end; justify-content: center; gap: 44px; padding: 8px 0 4px; }
@@ -126,43 +85,20 @@
 .caption { text-align: center; }
 .name { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
 .ratio { font-size: 0.72rem; font-weight: 600; color: var(--muted); }
-.figureNote {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--mint);
-  color: #3d4d44;
-  font-size: 0.82rem;
-  line-height: 1.6;
-}
-.figureNote strong { color: var(--dark-green); }
 
 /* ---------- Questions ---------- */
 .questionBlock { padding: 20px 0; border-bottom: 1px solid #f0f0f4; scroll-margin-top: 24px; }
+.questionBlock:last-of-type { border-bottom: none; }
 .questionMissing .qText { color: var(--err); }
-.questionMissing .qNumber { background: var(--err); }
+.questionMissing .qNumber { color: var(--err); }
 .qHeader { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
 .qNumber {
   flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  min-width: 28px; height: 28px;
-  margin-top: 1px;
-  padding: 0 7px;
-  border-radius: 14px;
-  background: var(--dark-green);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.qOptional {
-  flex-shrink: 0;
-  margin-top: 1px;
-  padding: 5px 10px;
-  border-radius: 14px;
-  background: var(--light-green);
+  min-width: 28px;
   color: var(--dark-green);
-  font-size: 0.7rem;
+  font-size: 0.98rem;
   font-weight: 700;
+  line-height: 1.45;
 }
 .qText { margin: 0; font-size: 0.98rem; font-weight: 700; line-height: 1.45; color: var(--ink); }
 .qLead { margin: -4px 0 12px 38px; color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
@@ -267,12 +203,11 @@
 
 /* ---------- Footer ---------- */
 .surveyFooter {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 16px;
   margin-top: 32px;
   padding-top: 24px;
   border-top: 2px dashed #ececf0;
 }
-.note { max-width: 420px; margin: 0; color: #8a8a9a; font-size: 0.8rem; line-height: 1.5; }
 .submitBtn {
   padding: 14px 34px;
   border: none;
@@ -312,6 +247,8 @@
   /* Full width for the answers on a narrow screen */
   .options, .rankList, .indent, .contactFields, .standaloneCheck { margin-left: 0; }
   .qLead, .qHint { margin-left: 0; }
+  .qHeader { gap: 6px; }
+  .qNumber { min-width: 0; }
   .qHint { margin-top: -4px; }
   .phones { gap: 32px; }
   .regular { width: 65px; height: 134px; }

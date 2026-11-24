@@ -46,7 +46,7 @@ export default async function Image() {
           <div style={{ fontSize: 60, fontWeight: 700, lineHeight: 1.06, letterSpacing: -2 }}>{ANKETA_TEXT.title}</div>
           <div style={{ fontSize: 28, fontWeight: 500, marginTop: 28, color: '#5b675f' }}>Krátký průzkum, zabere 2-4 minuty.</div>
           <div style={{ display: 'flex', marginTop: 40 }}>
-            <div style={{ height: 60, padding: '0 30px', borderRadius: 30, background: '#2d683d', color: '#fff', fontSize: 26, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: '#1b5e3a', fontSize: 28, fontWeight: 700, display: 'flex' }}>
               {`${SITE_URL.replace(/^https?:\/\/(www\.)?/, '')}/dotaznik/anketa`}
             </div>
           </div>

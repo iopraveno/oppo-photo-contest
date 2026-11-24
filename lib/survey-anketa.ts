@@ -4,24 +4,16 @@
 import type { Answers, OpenQuestion, Option, Question, SurveyDef } from './survey';
 
 export const ANKETA_TEXT = {
-  tag: 'Krátký průzkum',
   title: 'Co říkáte na telefon se širším displejem?',
-  /** The intro is split so "širší displej" can be bold. */
-  intro: ['Zajímá nás váš názor na nový typ smartphonu. Je to klasický telefon, který se neskládá, jen má', 'širší displej', 'než telefony, na které jsme dnes zvyklí.'],
-  chips: ['10-18 otázek podle odpovědí', 'Zabere 2-4 minuty', 'Odpovědi jsou anonymní'],
-  formatLabel: 'Srovnání formátů',
-  formatWarn: 'Není to skládací telefon',
-  formatNoteLead: 'Ani jeden z telefonů se neskládá.',
-  formatNote:
-    'Široký telefon je nižší a o něco širší, displej má v poměru zhruba 16:10 nebo 16:9. Běžné telefony mají kolem 20:9. Obrázek ukazuje přibližné proporce, ne skutečnou velikost.',
-  footerNote: 'Děkujeme! Odpovědi použijeme jen k tomuto průzkumu a vyhodnotíme je souhrnně.',
+  intro:
+    'Zajímá nás váš názor na nový typ smartphonu. Je to klasický telefon, který se neskládá, jen je nižší a má širší displej než telefony, na které jsme dnes zvyklí. Zabere to 2-4 minuty.',
   submit: 'Odeslat dotazník',
   thanksTitle: 'Děkujeme za vaše odpovědi',
   thanks: 'Pomůžou nám pochopit, jaký telefon lidé v Česku opravdu chtějí.',
-  thanksContact: 'Kvůli setkání se vám ozveme na kontakt, který jste nám nechali.',
+  thanksContact: 'Kvůli setkání se vám ozveme e-mailem.',
   description: 'Krátký průzkum o telefonech se širším displejem. Zabere 2-4 minuty.',
   consent:
-    'Souhlasím, aby mě Jswin s.r.o., distributor OPPO v České republice, kontaktoval kvůli setkání k tomuto průzkumu. Kontakt po jeho skončení smažeme.',
+    'Souhlasím, aby mě Jswin s.r.o., distributor OPPO v České republice, kontaktoval kvůli setkání k tomuto průzkumu. E-mail po jeho skončení smažeme.',
 } as const;
 
 const MAX = (n: number) => `Vyberte nejvýš ${n}.`;
@@ -116,7 +108,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     short: 'Zdroje informací (pořadí)',
     kind: 'rank',
     title: 'Kde hledáte informace o telefonech? Seřaďte zdroje podle toho, jak jsou pro vás důležité.',
-    help: 'Klikejte od nejdůležitějšího, čísla se doplní sama. Stačí zdroje, které opravdu používáte, dalším kliknutím výběr zrušíte.',
+    help: 'Klikejte od nejdůležitějšího. Stačí zdroje, které opravdu používáte.',
     options: CHANNELS,
     check: { id: 'operator_call', short: 'Volal operátor', label: 'Už mi někdy volal operátor s nabídkou nového telefonu' },
   },
@@ -216,7 +208,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     style: 'list',
     grid: true,
     title: 'Jakou variantu paměti byste chtěli?',
-    help: 'První číslo je operační paměť (RAM), druhé místo na fotky, aplikace a data.',
+    help: 'První číslo je operační paměť, druhé úložiště.',
     options: [
       { value: '8_256', label: '8 GB + 256 GB' },
       { value: '8_512', label: '8 GB + 512 GB' },
@@ -450,7 +442,7 @@ export const ANKETA_QUESTIONS: Question[] = [
     title: 'Chtěli byste si s námi o tomhle tématu popovídat osobně?',
     lead: 'Jsme Jswin, oficiální distributor OPPO pro Českou republiku. Rádi bychom široké telefony probrali s některými z vás i naživo.',
     options: [
-      { value: 'ano', label: 'Ano, nechám vám kontakt' },
+      { value: 'ano', label: 'Ano, nechám vám e-mail' },
       { value: 'mozna', label: 'Možná, záleží na tom, kdy to bude' },
       { value: 'ne', label: 'Raději ne' },
     ],
