@@ -1,18 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { isAnswered, type Answers, type AnswerValue, type MultiQuestion, type Option, type Question, type SingleQuestion } from '@/lib/survey';
-import { ANKETA, ANKETA_TEXT } from '@/lib/survey-anketa';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { isAnswered, type Answers, type AnswerValue, type Option, type Question, type RankQuestion } from '@/lib/survey';
+import { ANKETA, ANKETA_TEXT, MESSAGE, anketaFlow, anketaLength, contactKind, otherKey } from '@/lib/survey-anketa';
 import { ANKETA_CONSENT_TEXT, cleanAnketaContact } from '@/lib/anketa-contact';
 import { submitAnketa } from './actions';
 import PhoneIllustration from './PhoneIllustration';
 import s from './anketa.module.css';
 
-// Separate drafts because the last two questions changed order and ranking semantics.
-const DRAFT_KEY = `oppo-anketa-${ANKETA.slug}-ranking-v2`;
-const DONE_KEY = `oppo-anketa-${ANKETA.slug}-hotovo`;
+const DRAFT_KEY = `oppo-anketa-${ANKETA.slug}`;
+const DONE_KEY = `${DRAFT_KEY}-hotovo`;
 
-type Draft = { answers: Answers; reached: number; startedAt: number; contactStep?: boolean };
+type Open = Record<string, string>;
+type Contact = { value: string; name: string; consent: boolean };
+// Contact details and consents stay in memory only, never in the browser draft.
+type Draft = { answers: Answers; open: Open; reached: number; startedAt: number; newsletterStep?: boolean };
+
+const NO_CONTACT: Contact = { value: '', name: '', consent: false };
+const BY_ID = new Map(ANKETA.questions.map((q) => [q.id, q]));
 
 const store = {
   get<T>(key: string): T | null {
@@ -40,8 +45,16 @@ const store = {
 };
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const firstDiff = (a: string[], b: string[]) => {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+};
+const wantsContact = (meet: AnswerValue | undefined) => meet === 'ano' || meet === 'mozna';
 
-const [INTRO_Q, ...QUESTIONS] = ANKETA.questions as [SingleQuestion, ...Question[]];
+/** Czech typesetting: a one-letter word (v, s, k, a, i…) never ends a line, it is glued to the next word. */
+const ONE_LETTER = /(^|[\s(])([aikosuvzAIKOSUVZ]) /g;
+const cz = (text: string) => text.replace(ONE_LETTER, '$1$2\u00a0').replace(ONE_LETTER, '$1$2\u00a0');
 
 function Mark({ on, multi }: { on: boolean; multi: boolean }) {
   return (
@@ -53,76 +66,154 @@ function Mark({ on, multi }: { on: boolean; multi: boolean }) {
   );
 }
 
-function Options({ q, value, onChange }: { q: Question; value: AnswerValue | undefined; onChange: (v: AnswerValue) => void }) {
-  if (q.kind === 'matrix') return null;
+/** Single and multiple choice. A "something else" option opens a short text field under it. */
+function Choices({
+  q,
+  value,
+  onPick,
+  other,
+  onOther,
+}: {
+  q: Question;
+  value: AnswerValue | undefined;
+  onPick: (v: AnswerValue) => void;
+  other: string;
+  onOther: (text: string) => void;
+}) {
+  if (q.kind === 'matrix' || q.kind === 'rank') return null;
   const multi = q.kind === 'multi';
-  const ranked = multi && q.ranked;
-  const picked = multi ? ((value as string[]) || []) : value ? [value as string] : [];
+  const picked = multi ? (Array.isArray(value) ? value : []) : typeof value === 'string' ? [value] : [];
+  const isExclusive = (v: string) => Boolean(q.options.find((o) => o.value === v)?.exclusive);
+  const full = multi && q.max ? picked.filter((v) => !isExclusive(v)).length >= q.max : false;
   const toggle = (o: Option) => {
-    if (!multi) return onChange(o.value);
-    if (picked.includes(o.value)) return onChange(picked.filter((v) => v !== o.value));
-    if (o.exclusive) return onChange([o.value]);
-    const kept = picked.filter((v) => !(q as MultiQuestion).options.find((x) => x.value === v)?.exclusive);
-    onChange([...kept, o.value]);
+    if (!multi) return onPick(o.value);
+    if (picked.includes(o.value)) return onPick(picked.filter((v) => v !== o.value));
+    if (o.exclusive) return onPick([o.value]);
+    onPick([...picked.filter((v) => !isExclusive(v)), o.value]);
   };
   return (
-    <div className={s.options} role={multi ? 'group' : 'radiogroup'} aria-label={q.title}>
+    <div className={`${s.options} ${q.grid ? s.grid : ''}`} role={multi ? 'group' : 'radiogroup'} aria-label={q.title}>
       {q.options.map((o) => {
         const on = picked.includes(o.value);
         return (
-          <button
-            key={o.value}
-            type="button"
-            role={multi ? undefined : 'radio'}
-            aria-checked={multi ? undefined : on}
-            aria-pressed={multi ? on : undefined}
-            className={`${s.option} ${on ? s.optionOn : ''} ${o.exclusive ? s.optionLast : ''}`}
-            onClick={() => toggle(o)}
-          >
-            {ranked && !o.exclusive ? (
-              <span className={`${s.mark} ${on ? s.markOn : ''}`} aria-hidden>{on ? picked.indexOf(o.value) + 1 : ''}</span>
-            ) : <Mark on={on} multi={multi} />}
-            {ranked && on && !o.exclusive && <span className={s.srOnly}>{picked.indexOf(o.value) + 1}. místo: </span>}
-            <span>{o.label}</span>
-          </button>
+          <Fragment key={o.value}>
+            <button
+              type="button"
+              role={multi ? undefined : 'radio'}
+              aria-checked={multi ? undefined : on}
+              aria-pressed={multi ? on : undefined}
+              disabled={full && !on && !o.exclusive}
+              className={`${s.option} ${on ? s.optionOn : ''} ${o.exclusive && !q.grid ? s.optionLast : ''}`}
+              onClick={() => toggle(o)}
+            >
+              <Mark on={on} multi={multi} />
+              <span>{cz(o.label)}</span>
+            </button>
+            {o.other && on && (
+              <input
+                className={`${s.input} ${s.otherInput}`}
+                value={other}
+                maxLength={200}
+                placeholder={o.other}
+                aria-label={`${o.label}: ${o.other}`}
+                onChange={(e) => onOther(e.target.value)}
+              />
+            )}
+          </Fragment>
         );
       })}
-      {ranked && <p className={s.help} aria-live="polite">
-        {picked.some((v) => q.options.find((o) => o.value === v)?.exclusive)
-          ? 'Vybráno: nic by mě nepřesvědčilo.'
-          : `Seřazeno ${picked.length} z ${q.options.filter((o) => !o.exclusive).length} možností.`}
-      </p>}
     </div>
+  );
+}
+
+/** Tap order is the rank; tapping again takes the item out and the rest move up. */
+function Rank({
+  q,
+  value,
+  onChange,
+  checked,
+  onCheck,
+}: {
+  q: RankQuestion;
+  value: AnswerValue | undefined;
+  onChange: (v: string[]) => void;
+  checked: boolean;
+  onCheck: (on: boolean) => void;
+}) {
+  const order = Array.isArray(value) ? value : [];
+  return (
+    <>
+      <div className={s.options} role="group" aria-label={q.title}>
+        {q.options.map((o) => {
+          const pos = order.indexOf(o.value);
+          const on = pos > -1;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={on}
+              aria-label={on ? `${o.label}, ${pos + 1}. místo` : o.label}
+              className={`${s.option} ${on ? s.optionOn : ''}`}
+              onClick={() => onChange(on ? order.filter((v) => v !== o.value) : [...order, o.value])}
+            >
+              <span className={`${s.rankNum} ${on ? s.rankNumOn : ''}`} aria-hidden>
+                {on ? pos + 1 : ''}
+              </span>
+              <span>{cz(o.label)}</span>
+            </button>
+          );
+        })}
+      </div>
+      {q.check && (
+        <label className={s.check}>
+          <input type="checkbox" checked={checked} onChange={(e) => onCheck(e.target.checked)} />
+          <span>{cz(q.check.label)}</span>
+        </label>
+      )}
+    </>
   );
 }
 
 export default function Anketa({ src, photos, logoSrc }: { src: string; photos: string[]; logoSrc: string | null }) {
   const [answers, setAnswers] = useState<Answers>({});
-  // How many of the 8 questions are on the page: 0 = still on the intro.
+  const [open, setOpen] = useState<Open>({});
+  const [contact, setContact] = useState<Contact>(NO_CONTACT);
+  // How many items of this person's path are on the page: 0 = still on the intro.
   const [reached, setReached] = useState(0);
   const [startedAt, setStartedAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<{ contact: boolean } | null>(null);
   const [ready, setReady] = useState(false);
-  const [contactStep, setContactStep] = useState(false);
+  // Optional OPPO newsletter, offered after the last question.
+  const [newsletterStep, setNewsletterStep] = useState(false);
   const [wantsNewsletter, setWantsNewsletter] = useState(false);
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
-  const contactBlock = useRef<HTMLElement>(null);
+  const newsletterBlock = useRef<HTMLElement>(null);
   const blocks = useRef<(HTMLElement | null)[]>([]);
   const honeypot = useRef<HTMLInputElement>(null);
   const scrollTo = useRef<number | null>(null);
+  const reachedRef = useRef(0);
+  const answersRef = useRef<Answers>({});
+
+  const setReachedTo = (n: number) => {
+    reachedRef.current = n;
+    setReached(n);
+  };
 
   useEffect(() => {
-    if (store.get(DONE_KEY)) setDone(true);
+    const finished = store.get<{ contact: boolean } | true>(DONE_KEY);
+    if (finished) setDone(finished === true ? { contact: false } : finished);
     else {
       const d = store.get<Draft>(DRAFT_KEY);
       if (d?.answers) {
+        answersRef.current = d.answers;
         setAnswers(d.answers);
-        setReached(Math.min(QUESTIONS.length, Math.max(0, d.reached || 0)));
+        setOpen(d.open || {});
+        setReachedTo(Math.min(anketaFlow(d.answers).length, Math.max(0, d.reached || 0)));
         setStartedAt(d.startedAt || 0);
-        setContactStep(d.contactStep === true);
+        setNewsletterStep(d.newsletterStep === true);
       }
     }
     setReady(true);
@@ -130,15 +221,14 @@ export default function Anketa({ src, photos, logoSrc }: { src: string; photos: 
 
   useEffect(() => {
     if (!ready || done) return;
-    // Contact details and consent stay in memory; never persist them in localStorage.
-    if (Object.keys(answers).length) store.set(DRAFT_KEY, { answers, reached, startedAt, contactStep } satisfies Draft);
-  }, [ready, done, answers, reached, startedAt, contactStep]);
+    if (Object.keys(answers).length) store.set(DRAFT_KEY, { answers, open, reached, startedAt, newsletterStep } satisfies Draft);
+  }, [ready, done, answers, open, reached, startedAt, newsletterStep]);
 
   useEffect(() => {
-    if (!contactStep) return;
-    contactBlock.current?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
-    contactBlock.current?.focus({ preventScroll: true });
-  }, [contactStep]);
+    if (!newsletterStep) return;
+    newsletterBlock.current?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    newsletterBlock.current?.focus({ preventScroll: true });
+  }, [newsletterStep]);
 
   // Bring a newly revealed question into view once it has rendered.
   useEffect(() => {
@@ -151,64 +241,108 @@ export default function Anketa({ src, photos, logoSrc }: { src: string; photos: 
     window.scrollTo({ top, behavior: reducedMotion() ? 'auto' : 'smooth' });
   }, [reached]);
 
+  const flow = anketaFlow(answers);
+
   const reveal = (count: number) => {
-    if (count <= reached) return;
-    scrollTo.current = count - 1;
-    setReached(count);
+    const n = Math.min(count, anketaFlow(answersRef.current).length);
+    if (n <= reachedRef.current) return;
+    scrollTo.current = n - 1;
+    setReachedTo(n);
   };
 
-  const answer = (q: Question, v: AnswerValue, index: number) => {
-    setAnswers((a) => ({ ...a, [q.id]: v }));
+  const answer = (q: Question, v: AnswerValue, i: number) => {
+    const next = { ...answersRef.current, [q.id]: v };
+    // A different branch: questions below that no longer apply close, the new ones open one by one.
+    const changedAt = firstDiff(anketaFlow(answersRef.current), anketaFlow(next));
+    answersRef.current = next;
+    setAnswers(next);
     setError('');
-    // Single choice moves on by itself; multiple choice waits for the button.
-    if (q.kind === 'single' && index + 1 < QUESTIONS.length) setTimeout(() => reveal(index + 2), reducedMotion() ? 0 : 260);
+    if (changedAt < reachedRef.current) {
+      setReachedTo(changedAt);
+      setNewsletterStep(false);
+    }
+    // Single choice moves on by itself, except when the meeting answer opens the contact fields.
+    if (q.kind === 'single' && !(q.id === 'meet' && wantsContact(v))) setTimeout(() => reveal(i + 2), reducedMotion() ? 0 : 260);
+  };
+
+  const setCheck = (id: string, on: boolean) => {
+    const next = { ...answersRef.current, [id]: on ? 'ano' : 'ne' };
+    answersRef.current = next;
+    setAnswers(next);
   };
 
   const start = () => {
     if (!startedAt) setStartedAt(Date.now());
-    if (reached === 0) reveal(1);
-    else {
-      const el = blocks.current[0];
-      el?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
-    }
+    if (reachedRef.current === 0) reveal(1);
+    else blocks.current[0]?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
   };
 
-  const allAnswered = ANKETA.questions.every((q) => isAnswered(q, answers[q.id]));
-  const answeredCount = ANKETA.questions.filter((q) => isAnswered(q, answers[q.id])).length;
+  const questionIds = flow.filter((id) => BY_ID.has(id));
+  const answeredCount = questionIds.filter((id) => isAnswered(BY_ID.get(id)!, answers[id])).length;
+  const pathLength = anketaLength(answers);
+  const total = pathLength - 1; // the closing message is optional
+  const contactType = contactKind(contact.value);
+  const contactReady =
+    answers.meet === 'ano'
+      ? Boolean(contactType && contact.consent)
+      : answers.meet === 'mozna'
+        ? !contact.value.trim() || Boolean(contactType && contact.consent)
+        : true;
+  const allAnswered = questionIds.every((id) => isAnswered(BY_ID.get(id)!, answers[id])) && contactReady;
 
-  const contactReady = !cleanAnketaContact({ newsletter: true, email, consent }).error;
+  const newsletterReady = !cleanAnketaContact({ newsletter: true, email, consent }).error;
+
+  const openNewsletter = () => {
+    // A meeting e-mail is the likely newsletter address too; the person can still change it.
+    if (!email && contactType === 'email') setEmail(contact.value.trim());
+    setNewsletterStep(true);
+  };
 
   async function submit(newsletter: boolean) {
     if (busy || !allAnswered) return;
     if (!newsletter) {
       setWantsNewsletter(false);
-      setEmail('');
       setConsent(false);
     }
     setBusy(true);
     setError('');
+    // Send only what belongs to this person's path.
+    const sentAnswers: Answers = {};
+    const sentOpen: Open = {};
+    for (const id of questionIds) {
+      const q = BY_ID.get(id)!;
+      if (answers[id] !== undefined) sentAnswers[id] = answers[id];
+      if (q.kind === 'rank' && q.check) sentAnswers[q.check.id] = answers[q.check.id] ?? 'ne';
+      if (open[otherKey(id)]) sentOpen[otherKey(id)] = open[otherKey(id)];
+    }
+    if (open[MESSAGE.id]?.trim()) sentOpen[MESSAGE.id] = open[MESSAGE.id];
+    const withContact = wantsContact(answers.meet) && Boolean(contact.value.trim());
     const res = await submitAnketa({
-      answers, src, startedAt, website: honeypot.current?.value || '',
-      newsletter, email: newsletter ? email : '', consent: newsletter && consent,
-    }).catch(() => ({
-      ok: false as const,
-      error: 'Spojení se přerušilo. Zkuste to prosím znovu.',
-    }));
+      answers: sentAnswers,
+      open: sentOpen,
+      ...(withContact ? { meetContact: contact.value, meetName: contact.name, meetConsent: contact.consent } : {}),
+      newsletter,
+      email: newsletter ? email : '',
+      consent: newsletter && consent,
+      src,
+      startedAt,
+      website: honeypot.current?.value || '',
+    }).catch(() => ({ ok: false as const, error: 'Spojení se přerušilo. Zkuste to prosím znovu.' }));
     setBusy(false);
     if (!res.ok) return setError(res.error);
     store.remove(DRAFT_KEY);
-    store.set(DONE_KEY, true);
-    setDone(true);
+    store.set(DONE_KEY, { contact: withContact });
+    setDone({ contact: withContact });
     window.scrollTo({ top: 0 });
   }
 
-  const visual = (
+  const photo = (
     <figure className={s.visual}>
       {photos.length ? (
         <div className={s.photos} data-count={photos.length}>
           {photos.map((p, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={p} src={p} alt={i === 0 ? 'Telefon v širším formátu, pohled zepředu' : ''} loading={i === 0 ? 'eager' : 'lazy'} />
+            <img key={p} src={p} alt={i === 0 ? 'Telefon se širším displejem v ruce, pohled zepředu' : ''} loading={i === 0 ? 'eager' : 'lazy'} />
           ))}
         </div>
       ) : (
@@ -217,10 +351,18 @@ export default function Anketa({ src, photos, logoSrc }: { src: string; photos: 
     </figure>
   );
 
+  const nextButton = (i: number, enabled: boolean) => (
+    <div className={s.actions}>
+      <button type="button" className={s.secondary} disabled={!enabled} onClick={() => reveal(i + 2)}>
+        Další otázka
+      </button>
+    </div>
+  );
+
   return (
     <div className={s.root} data-anketa>
       <div className={s.progress} aria-hidden>
-        <span style={{ width: `${done ? 100 : (answeredCount / ANKETA.questions.length) * 100}%` }} />
+        <span style={{ width: `${done ? 100 : total ? Math.min(100, (answeredCount / total) * 100) : 0}%` }} />
       </div>
 
       <div className={s.page}>
@@ -233,102 +375,237 @@ export default function Anketa({ src, photos, logoSrc }: { src: string; photos: 
           <section className={s.hero}>
             <div className={s.heroText}>
               <h1 className={s.h1}>{ANKETA_TEXT.thanksTitle}</h1>
-              <p className={s.lead}>{ANKETA_TEXT.thanks}</p>
+              <p className={s.lead}>{cz(ANKETA_TEXT.thanks)}</p>
+              {done.contact && <p className={s.time}>{cz(ANKETA_TEXT.thanksContact)}</p>}
             </div>
-            {visual}
+            {photo}
           </section>
         ) : (
           <>
             <section className={s.hero}>
               <div className={s.heroText}>
-                <h1 className={s.h1}>{ANKETA_TEXT.title}</h1>
-                <p className={s.lead}>{ANKETA_TEXT.intro}</p>
-                <p className={s.time}>{ANKETA_TEXT.time}</p>
+                <h1 className={s.h1}>{cz(ANKETA_TEXT.title)}</h1>
+                <p className={s.lead}>{cz(ANKETA_TEXT.intro)}</p>
+                <p className={s.time}>{cz(ANKETA_TEXT.time)}</p>
               </div>
-              {visual}
+              {photo}
             </section>
 
-            <section className={s.block}>
-              <div className={s.qHead}>
-                <span className={s.num} aria-label={`Otázka 1 z ${ANKETA.questions.length}`}>1/{ANKETA.questions.length}</span>
-                <h2 className={s.qTitle}>{INTRO_Q.title}</h2>
-              </div>
-              <Options q={INTRO_Q} value={answers[INTRO_Q.id]} onChange={(v) => setAnswers((a) => ({ ...a, [INTRO_Q.id]: v }))} />
-              <div className={s.actions}>
-                <button type="button" className={s.primary} disabled={!answers[INTRO_Q.id]} onClick={start}>
-                  {ANKETA_TEXT.start}
-                  <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
-                    <path d="M4 10h11m-4-4.5L15.5 10 11 14.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
+            <section className={`${s.block} ${s.format}`}>
+              <PhoneIllustration className={s.formatFigure} compact />
+              <div>
+                <p className={s.formatNote}>{cz(ANKETA_TEXT.formatNote)}</p>
+                <div className={s.actions}>
+                  <button type="button" className={s.primary} onClick={start}>
+                    {ANKETA_TEXT.start}
+                    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
+                      <path d="M4 10h11m-4-4.5L15.5 10 11 14.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </section>
 
-            <ol className={s.list} start={2}>
-              {QUESTIONS.slice(0, reached).map((q, i) => {
-                const last = i === QUESTIONS.length - 1;
-                const ok = isAnswered(q, answers[q.id]);
+            <ol className={s.list}>
+              {flow.slice(0, reached).map((id, i) => {
+                const current = reached === i + 1;
+                const setRef = (el: HTMLElement | null) => {
+                  blocks.current[i] = el;
+                };
+
+                if (id === MESSAGE.id) {
+                  return (
+                    <li key={id} ref={setRef} className={`${s.block} ${s.reveal}`}>
+                      <div className={s.qHead}>
+                        <span className={s.num} aria-label={`Otázka ${i + 1} z ${pathLength}`}>{i + 1}/{pathLength}</span>
+                        <div>
+                          <h2 className={s.qTitle}>
+                            <label htmlFor="anketa-message">{cz(MESSAGE.label)}</label>
+                          </h2>
+                          <p className={s.help}>Nepovinné.</p>
+                        </div>
+                      </div>
+                      <textarea
+                        id="anketa-message"
+                        className={`${s.input} ${s.textarea}`}
+                        maxLength={1000}
+                        placeholder={MESSAGE.placeholder}
+                        value={open[MESSAGE.id] || ''}
+                        onChange={(e) => setOpen((o) => ({ ...o, [MESSAGE.id]: e.target.value }))}
+                      />
+                      {!newsletterStep && (
+                        <div className={s.actions}>
+                          <button type="button" className={s.primary} disabled={!allAnswered} onClick={openNewsletter}>
+                            Pokračovat
+                          </button>
+                          {!allAnswered && <span className={s.note}>Chybí odpověď u některé otázky výše.</span>}
+                        </div>
+                      )}
+                    </li>
+                  );
+                }
+
+                const q = BY_ID.get(id)!;
+                const value = answers[id];
+                const ok = isAnswered(q, value);
+                const picked = Array.isArray(value) ? value.length : 0;
+                const full = q.kind === 'multi' && q.max && picked >= q.max;
                 return (
-                  <li
-                    key={q.id}
-                    ref={(el) => {
-                      blocks.current[i] = el;
-                    }}
-                    className={`${s.block} ${s.reveal}`}
-                  >
+                  <li key={id} ref={setRef} className={`${s.block} ${s.reveal}`}>
                     <div className={s.qHead}>
-                      <span className={s.num} aria-label={`Otázka ${i + 2} z ${ANKETA.questions.length}`}>{i + 2}/{ANKETA.questions.length}</span>
+                      <span className={s.num} aria-label={`Otázka ${i + 1} z ${pathLength}`}>{i + 1}/{pathLength}</span>
                       <div>
-                        <h2 className={s.qTitle}>{q.title}</h2>
-                        {q.help && <p className={s.help}>{q.help}</p>}
+                        <h2 className={s.qTitle}>{cz(q.title)}</h2>
+                        {q.lead && <p className={s.qLead}>{cz(q.lead)}</p>}
+                        {q.help && (
+                          <p className={s.help} aria-live="polite">
+                            {full ? `Máte vybrané ${picked} z ${q.max}. Pro jinou volbu nejdřív některou odznačte.` : cz(q.help)}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <Options q={q} value={answers[q.id]} onChange={(v) => answer(q, v, i)} />
-                    {q.kind === 'multi' && !last && reached === i + 1 && (
-                      <div className={s.actions}>
-                        <button type="button" className={s.secondary} disabled={!ok} onClick={() => reveal(i + 2)}>
-                          Další otázka
-                        </button>
+
+                    {q.kind === 'rank' ? (
+                      <Rank
+                        q={q}
+                        value={value}
+                        onChange={(v) => answer(q, v, i)}
+                        checked={q.check ? answers[q.check.id] === 'ano' : false}
+                        onCheck={(on) => q.check && setCheck(q.check.id, on)}
+                      />
+                    ) : (
+                      <Choices
+                        q={q}
+                        value={value}
+                        onPick={(v) => answer(q, v, i)}
+                        other={open[otherKey(id)] || ''}
+                        onOther={(text) => setOpen((o) => ({ ...o, [otherKey(id)]: text }))}
+                      />
+                    )}
+
+                    {id === 'meet' && wantsContact(value) && (
+                      <div className={s.contact}>
+                        <label className={s.field}>
+                          <span className={s.fieldLabel}>Telefon nebo e-mail{value === 'mozna' ? ' (nepovinné)' : ''}</span>
+                          <input
+                            className={s.input}
+                            value={contact.value}
+                            maxLength={120}
+                            autoComplete="email"
+                            placeholder="777 123 456 nebo vas@email.cz"
+                            onChange={(e) => setContact((c) => ({ ...c, value: e.target.value }))}
+                          />
+                          <span className={s.fieldHint}>
+                            {value === 'ano' ? 'Ozveme se vám s termínem a místem.' : 'Když ho vyplníte, dáme vám vědět, až budeme znát termín.'}
+                          </span>
+                        </label>
+                        <label className={s.field}>
+                          <span className={s.fieldLabel}>Jméno (nepovinné)</span>
+                          <input
+                            className={s.input}
+                            value={contact.name}
+                            maxLength={80}
+                            autoComplete="name"
+                            onChange={(e) => setContact((c) => ({ ...c, name: e.target.value }))}
+                          />
+                        </label>
+                        {contact.value.trim().length >= 6 && !contactType && (
+                          <p className={s.note}>Takhle to nevypadá jako telefon ani e-mail. Zkontrolujte to prosím.</p>
+                        )}
+                        {contact.value.trim() && (
+                          <label className={s.consent}>
+                            <input type="checkbox" checked={contact.consent} onChange={(e) => setContact((c) => ({ ...c, consent: e.target.checked }))} />
+                            <span>
+                              {cz(ANKETA_TEXT.consent)}{' '}
+                              <a href="/ochrana-osobnich-udaju#dotaznik" target="_blank" rel="noopener">
+                                Ochrana osobních údajů
+                              </a>
+                            </span>
+                          </label>
+                        )}
                       </div>
                     )}
-                    {last && !contactStep && (
-                      <div className={s.actions}>
-                        <button type="button" className={s.primary} disabled={!allAnswered} onClick={() => setContactStep(true)}>
-                          Pokračovat
-                        </button>
-                        {!allAnswered && ok && <span className={s.note}>Chybí odpověď u některé otázky výše.</span>}
-                      </div>
-                    )}
+
+                    {current && (q.kind === 'multi' || q.kind === 'rank') && nextButton(i, ok)}
+                    {current && id === 'meet' && wantsContact(value) && nextButton(i, contactReady)}
                   </li>
                 );
               })}
             </ol>
-            {contactStep && (
-              <section ref={contactBlock} tabIndex={-1} aria-labelledby="newsletter-title" className={`${s.block} ${s.contact} ${s.reveal}`}>
+
+            {newsletterStep && (
+              <section ref={newsletterBlock} tabIndex={-1} aria-labelledby="newsletter-title" className={`${s.block} ${s.newsletter} ${s.reveal}`}>
                 <p className={s.optional}>Zcela nepovinné</p>
-                <h2 id="newsletter-title" className={s.qTitle}>Chcete být s OPPO v obraze?</h2>
-                <p className={s.contactLead}>Chcete od nás občas dostávat novinky o telefonech OPPO, tipy a pozvánky? Pokud ne, anketu jednoduše dokončete bez e-mailu.</p>
+                <h2 id="newsletter-title" className={s.qTitle}>{cz('Chcete být s OPPO v obraze?')}</h2>
+                <p className={s.qLead}>
+                  {cz('Občas vám pošleme novinky o telefonech OPPO, tipy a pozvánky. Pokud o ně nestojíte, anketu jednoduše dokončete bez e-mailu.')}
+                </p>
                 <div className={s.actions}>
-                  <button type="button" className={s.secondary} disabled={busy} aria-expanded={wantsNewsletter} aria-controls="newsletter-form" onClick={() => { setWantsNewsletter(true); setError(''); }}>
+                  <button
+                    type="button"
+                    className={wantsNewsletter ? s.primaryGhost : s.secondary}
+                    disabled={busy}
+                    aria-expanded={wantsNewsletter}
+                    aria-controls="newsletter-form"
+                    onClick={() => {
+                      setWantsNewsletter(true);
+                      setError('');
+                    }}
+                  >
                     Ano, chci novinky
                   </button>
                   <button type="button" className={s.secondary} disabled={busy || !allAnswered} onClick={() => submit(false)}>
-                    {busy ? 'Odesílám…' : 'Ne, děkuji — dokončit anketu'}
+                    {busy && !wantsNewsletter ? 'Odesílám…' : 'Ne, děkuji, dokončit anketu'}
                   </button>
                 </div>
                 {wantsNewsletter && (
-                  <form id="newsletter-form" className={s.contactForm} onSubmit={(e) => { e.preventDefault(); if (contactReady) void submit(true); }}>
+                  <form
+                    id="newsletter-form"
+                    className={s.newsletterForm}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newsletterReady) void submit(true);
+                    }}
+                  >
                     <label className={s.field}>
-                      <span>E-mail pro odběr novinek</span>
-                      <input type="email" inputMode="email" autoComplete="email" maxLength={120} required value={email} onChange={(e) => { setEmail(e.target.value); setError(''); }} placeholder="vas@email.cz" disabled={busy} />
+                      <span className={s.fieldLabel}>E-mail pro novinky</span>
+                      <input
+                        className={s.input}
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        maxLength={120}
+                        required
+                        value={email}
+                        placeholder="vas@email.cz"
+                        disabled={busy}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setError('');
+                        }}
+                      />
                     </label>
                     <label className={s.consent}>
-                      <input type="checkbox" required checked={consent} onChange={(e) => { setConsent(e.target.checked); setError(''); }} disabled={busy} />
-                      <span>{ANKETA_CONSENT_TEXT}{' '}<a href="/ochrana-osobnich-udaju#novinky" target="_blank" rel="noopener noreferrer">Ochrana osobních údajů</a></span>
+                      <input
+                        type="checkbox"
+                        required
+                        checked={consent}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setConsent(e.target.checked);
+                          setError('');
+                        }}
+                      />
+                      <span>
+                        {cz(ANKETA_CONSENT_TEXT)}{' '}
+                        <a href="/ochrana-osobnich-udaju#novinky" target="_blank" rel="noopener noreferrer">
+                          Ochrana osobních údajů
+                        </a>
+                      </span>
                     </label>
                     <div className={s.actions}>
-                      <button type="submit" className={s.primary} disabled={busy || !allAnswered || !contactReady}>
-                        {busy ? 'Odesílám…' : 'Odeslat anketu a přihlásit se'}
+                      <button type="submit" className={s.primary} disabled={busy || !allAnswered || !newsletterReady}>
+                        {busy ? 'Odesílám…' : 'Odeslat a přihlásit k novinkám'}
                       </button>
                     </div>
                   </form>

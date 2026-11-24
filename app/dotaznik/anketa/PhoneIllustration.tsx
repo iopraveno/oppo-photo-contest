@@ -1,5 +1,4 @@
-// Brandless product-style illustration: today's tall phone next to the wider format.
-// Shown on the poll until real photos are added to public/img/anketa/.
+// Brandless product-style illustration: today's tall phone next to the wide format, same height.
 
 type Props = { className?: string; compact?: boolean };
 
@@ -54,20 +53,24 @@ function Phone({ x, y, w, h, r, id, clock }: { x: number; y: number; w: number; 
 }
 
 export default function PhoneIllustration({ className, compact }: Props) {
-  // Same height for both, so the difference reads as width: 9:19.5 vs. a passport-like 1:1.38.
+  // Same height for both, so the difference reads as width: about 20:9 next to about 16:10.
   const h = compact ? 300 : 360;
-  const tallW = Math.round(h / 2.17);
-  const wideW = Math.round(h / 1.38);
-  const gap = 56;
+  const tallW = Math.round(h / 2.22);
+  const wideW = Math.round(h / 1.6);
+  const gap = 64;
   const pad = 40;
   const width = pad * 2 + tallW + gap + wideW;
+  const cTall = pad + tallW / 2;
+  const cWide = pad + tallW + gap + wideW / 2;
   return (
-    <svg className={className} viewBox={`0 0 ${width} ${h + 90}`} role="img" aria-label="Ilustrace: dnešní úzký telefon vedle širšího formátu">
+    <svg className={className} viewBox={`0 0 ${width} ${h + 118}`} role="img" aria-label="Běžný telefon v poměru zhruba 20:9 vedle širokého telefonu v poměru zhruba 16:10">
       <Phone id="tall" x={pad} y={20} w={tallW} h={h} r={26} clock={false} />
       <Phone id="wide" x={pad + tallW + gap} y={20} w={wideW} h={h} r={30} clock />
-      <g fontSize="14" fill="#5b675f" textAnchor="middle">
-        <text x={pad + tallW / 2} y={h + 82}>Dnešní telefon</text>
-        <text x={pad + tallW + gap + wideW / 2} y={h + 82}>Širší formát</text>
+      <g textAnchor="middle">
+        <text x={cTall} y={h + 84} fontSize="20" fontWeight={700} fill="#0e1a13">Běžný telefon</text>
+        <text x={cTall} y={h + 108} fontSize="18" fill="#5b675f">zhruba 20:9</text>
+        <text x={cWide} y={h + 84} fontSize="20" fontWeight={700} fill="#0e1a13">Široký telefon</text>
+        <text x={cWide} y={h + 108} fontSize="18" fill="#5b675f">zhruba 16:10</text>
       </g>
     </svg>
   );

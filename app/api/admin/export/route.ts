@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getUser, isAdminEmail, isPhotowalkAdminEmail, isSurveyAdminEmail } from '@/lib/auth';
 import { formatResponseAnswer, labelOf, type Answers } from '@/lib/survey';
-import { listResponses, sourceLabel, surveyByVersion } from '@/lib/survey-data';
+import { listResponses, sourceLabel, versionByExport } from '@/lib/survey-data';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PHOTOWALK } from '@/lib/config';
 
@@ -14,16 +14,17 @@ function csv(rows: (string | number | boolean | null | undefined)[][]) {
 export async function GET(request: NextRequest) {
   const user = await getUser();
   const typ = request.nextUrl.searchParams.get('typ');
-  const type = typ === 'hlasy' ? 'hlasy' : typ === 'photowalk' ? 'photowalk' : typ === 'dotaznik' ? 'dotaznik' : typ === 'anketa' ? 'anketa' : 'fotky';
+  const survey = versionByExport(typ);
+  const type = survey ? 'survey' : typ === 'hlasy' ? 'hlasy' : typ === 'photowalk' ? 'photowalk' : 'fotky';
   const allowed =
-    type === 'photowalk' ? isPhotowalkAdminEmail(user?.email) : type === 'dotaznik' || type === 'anketa' ? isSurveyAdminEmail(user?.email) : isAdminEmail(user?.email);
+    type === 'photowalk' ? isPhotowalkAdminEmail(user?.email) : type === 'survey' ? isSurveyAdminEmail(user?.email) : isAdminEmail(user?.email);
   if (!user || !allowed) return new NextResponse('Forbidden', { status: 403 });
   const supabase = createAdminClient();
   let body: string;
 
-  if (type === 'dotaznik' || type === 'anketa') {
+  if (survey) {
     // One column per question; matrix questions get one column per row. Values are the labels people saw.
-    const def = surveyByVersion(type === 'anketa' ? 'anketa' : undefined);
+    const def = survey.def;
     const cols: { head: string; get: (a: Record<string, unknown>) => string }[] = [];
     for (const q of [...def.questions, ...(def.archivedQuestions ?? [])]) {
       if (q.kind === 'matrix') {
@@ -38,13 +39,20 @@ export async function GET(request: NextRequest) {
         }
       } else {
         cols.push({ head: q.short, get: (a) => formatResponseAnswer(q, a as Answers) });
+        const check = q.kind === 'rank' ? q.check : undefined;
+        if (check) cols.push({ head: check.short, get: (a) => (a[check.id] === 'ano' ? 'ano' : a[check.id] === 'ne' ? 'ne' : '') });
       }
     }
+    const contactName = Boolean(def.meeting?.phoneOrEmail);
     const responses = ((await listResponses(def.slug)) ?? []).slice().reverse();
     body = csv([
       [
         'odeslano', 'zdroj', 'zarizeni', 'doba_s', ...cols.map((c) => c.head), ...def.open.map((o) => o.label),
-        ...(def.meeting ? ['chce_na_setkani', 'email', 'souhlas'] : []),
+        ...(def.meeting
+          ? contactName
+            ? ['chce_na_setkani', 'kontakt_setkani', 'jmeno', 'souhlas_setkani_cas']
+            : ['chce_na_setkani', 'email', 'souhlas']
+          : []),
         ...(def.newsletter ? ['email_novinky', 'souhlas_novinky', 'souhlas_novinky_cas', 'souhlas_novinky_verze', 'souhlas_novinky_text'] : []),
       ],
       ...responses.map((r) => [
@@ -52,13 +60,24 @@ export async function GET(request: NextRequest) {
         ...cols.map((c) => c.get(r.answers as Record<string, unknown>)),
         ...def.open.map((o) => r.open_answers?.[o.id] ?? ''),
         ...(def.meeting
-          ? [r.wants_meeting === true ? 'ano' : r.wants_meeting === false ? 'ne' : '', r.email ?? '', r.contact_consent ? 'ano' : '']
+          ? contactName
+            ? [
+                r.wants_meeting === true ? 'ano' : r.wants_meeting === false ? 'ne' : '',
+                r.open_answers?.meet_contact ?? '',
+                r.open_answers?.contact_name ?? '',
+                r.open_answers?.meet_consent_at ?? '',
+              ]
+            : [r.wants_meeting === true ? 'ano' : r.wants_meeting === false ? 'ne' : '', r.email ?? '', r.contact_consent ? 'ano' : '']
           : []),
-        ...(def.newsletter ? [
-          r.email ?? '', r.contact_consent ? 'ano' : 'ne',
-          r.open_answers?.newsletter_consent_at ?? '', r.open_answers?.newsletter_consent_version ?? '',
-          r.open_answers?.newsletter_consent_text ?? '',
-        ] : []),
+        ...(def.newsletter
+          ? [
+              r.email ?? '',
+              r.contact_consent ? 'ano' : 'ne',
+              r.open_answers?.newsletter_consent_at ?? '',
+              r.open_answers?.newsletter_consent_version ?? '',
+              r.open_answers?.newsletter_consent_text ?? '',
+            ]
+          : []),
       ]),
     ]);
   } else if (type === 'photowalk') {
@@ -104,7 +123,7 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="${
-        type === 'photowalk' ? 'photowalk-prihlasky' : type === 'dotaznik' ? 'dotaznik-siroke-telefony' : type === 'anketa' ? 'anketa-novy-format' : `lovci-svetla-${type}`
+        survey ? survey.file : type === 'photowalk' ? 'photowalk-prihlasky' : `lovci-svetla-${type}`
       }.csv"`,
     },
   });

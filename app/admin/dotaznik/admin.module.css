@@ -67,3 +67,9 @@
 .switch { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; margin-bottom: 18px; background: var(--white); }
 .switch a { padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none; color: var(--ink-2); }
 .switch a.switchOn { background: var(--ink); color: var(--white); }
+
+/* Ranking chart: light bar = picked at all, dark bar on top = ranked first */
+.rankRow { grid-template-columns: minmax(120px, 38%) 1fr 92px; }
+.rankTrack { position: relative; }
+.rankTrack .bar { position: absolute; inset: 0 auto 0 0; }
+.checkLine { font-size: 14px; color: var(--ink-2); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }

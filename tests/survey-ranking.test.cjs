@@ -9,7 +9,8 @@ require.extensions['.ts'] = (module, filename) => {
   });
   module._compile(outputText, filename);
 };
-const { ANKETA } = require('../lib/survey-anketa.ts');
+// The complete-ranking question lives in the first poll version, kept in the admin for its answers.
+const { ANKETA_V1: ANKETA } = require('../lib/survey-anketa-v1.ts');
 const { cleanAnswers, isAnswered, formatAnswer, formatResponseAnswer } = require('../lib/survey.ts');
 const ranking = ANKETA.questions.at(-1);
 const ordered = ['cena', 'fotoaparaty', 'baterie', 'ergonomie_design'];

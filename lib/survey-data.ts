@@ -1,9 +1,9 @@
 import 'server-only';
 import { createAdminClient } from './supabase/admin';
 import { isSupabaseConfigured } from './env';
-import { QUESTIONS, SURVEY, type Answers, type OpenAnswers, type Question } from './survey';
+import { MAIN_SURVEY, QUESTIONS, SURVEY, type Answers, type OpenAnswers, type Question, type SurveyDef } from './survey';
 import { ANKETA } from './survey-anketa';
-import { MAIN_SURVEY, type SurveyDef } from './survey';
+import { ANKETA_V1 } from './survey-anketa-v1';
 
 export type SurveyResponse = {
   id: string;
@@ -21,8 +21,17 @@ export type SurveyResponse = {
 /** src, device and meet are fixed; any other key is a question id with the picked value. */
 export type SurveyFilters = Record<string, string | undefined>;
 
-/** Survey shown in the admin: ?verze=anketa for the test survey, the main one otherwise. */
-export const surveyByVersion = (v: string | undefined): SurveyDef => (v === 'anketa' ? ANKETA : MAIN_SURVEY);
+/** Surveys in the admin switch. key is ?verze= in the admin and typ= in the CSV export. */
+export const SURVEY_VERSIONS: { key: string; exportType: string; file: string; def: SurveyDef }[] = [
+  { key: '', exportType: 'dotaznik', file: 'dotaznik-siroke-telefony', def: MAIN_SURVEY },
+  { key: 'anketa', exportType: 'anketa', file: 'anketa-siroky-displej', def: ANKETA },
+  { key: 'anketa-v1', exportType: 'anketa-v1', file: 'anketa-novy-format-v1', def: ANKETA_V1 },
+];
+
+export const versionOf = (key: string | undefined | null) => SURVEY_VERSIONS.find((v) => v.key === (key || '')) ?? SURVEY_VERSIONS[0];
+export const versionByExport = (typ: string | null) => SURVEY_VERSIONS.find((v) => v.exportType === typ);
+export const surveyByVersion = (key: string | undefined): SurveyDef => versionOf(key).def;
+export const adminHref = (key: string) => (key ? `/admin/dotaznik?verze=${key}` : '/admin/dotaznik');
 
 /** null = the table is missing (supabase/dotaznik.sql not run yet). */
 export async function listResponses(slug: string = SURVEY.slug): Promise<SurveyResponse[] | null> {
@@ -77,6 +86,33 @@ export function countOptions(rows: SurveyResponse[], q: Question): { counts: Cou
     }
   }
   return { counts, answered };
+}
+
+export type RankCount = Count & { first: number; avgPos: number | null };
+
+/** Ranking questions: how many picked each item at all, how many put it first, and its average position. */
+export function countRank(rows: SurveyResponse[], q: Question): { counts: RankCount[]; answered: number } {
+  if (q.kind !== 'rank') return { counts: [], answered: 0 };
+  const counts = q.options.map((o) => ({ value: o.value, label: o.label, count: 0, first: 0, sum: 0 }));
+  let answered = 0;
+  for (const r of rows) {
+    const v = r.answers[q.id];
+    if (!Array.isArray(v) || !v.length) continue;
+    answered++;
+    v.forEach((p, i) => {
+      const c = counts.find((x) => x.value === p);
+      if (!c) return;
+      c.count++;
+      c.sum += i + 1;
+      if (i === 0) c.first++;
+    });
+  }
+  return {
+    answered,
+    counts: counts
+      .map(({ sum, ...c }) => ({ ...c, avgPos: c.count ? sum / c.count : null }))
+      .sort((a, b) => b.first - a.first || b.count - a.count),
+  };
 }
 
 /** Matrix questions: for each row, one count per column. */

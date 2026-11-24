@@ -140,6 +140,12 @@ Zprovoznění:
 2. Volitelně přidej do Vercelu `SURVEY_ADMIN_EMAILS` pro kolegy, kteří mají vidět jen odpovědi z dotazníku.
 3. Otevři `/admin/dotaznik`. Export do CSV otevřeš v Google Sheets (Soubor, Importovat) nebo v Excelu.
 
+### Anketa (`/dotaznik/anketa`)
+
+Kratší testovací anketa vedle hlavního dotazníku. Otázky a větvení jsou v `lib/survey-anketa.ts`: podle toho, jestli člověk o širokých telefonech slyšel a jestli ho zajímají, dostane jednu ze tří cest (`anketaFlow`). Server ukládá jen otázky z cesty, kterou člověk opravdu prošel. Odpovědi mají slug `wide-2026-anketa-2`; první verze ankety (`wide-2026-anketa`) zůstává v adminu jako „Anketa, 1. verze“ (`lib/survey-anketa-v1.ts`).
+
+Kontakt k osobnímu setkání (telefon nebo e-mail, jméno, čas souhlasu) je v `open_answers.meet_contact`, `contact_name` a `meet_consent_at`, aby sloupce `email` a `contact_consent` zůstaly vyhrazené pro novinky.
+
 ### Nepovinné novinky v anketě
 
 Na konci `/dotaznik/anketa` je nepovinný odběr novinek OPPO. „Ne, děkuji“ odešle odpovědi bez kontaktu; „Ano“ vyžaduje platný e-mail a samostatný souhlas. E-mail a souhlas se neukládají do konceptu v prohlížeči. Při odmítnutí server ignoruje i dříve vyplněný e-mail.

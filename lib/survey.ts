@@ -29,10 +29,17 @@ export type Option = {
   shape?: Shape;
   /** Memory options: how full the little phone next to the label is drawn (0-1). */
   level?: number;
+  /** "Something else": picking it opens a short text field with this placeholder, saved as open answer `${questionId}_jine`. */
+  other?: string;
 };
 
-/** short: column name in the admin table and the CSV. */
-type Base = { id: string; section: string; title: string; short: string; help?: string };
+/**
+ * short: column name in the admin table and the CSV.
+ * grid: short options shown in two columns.
+ * audience: admin note on who was asked (branching surveys).
+ * lead: a sentence shown under the title before the help line.
+ */
+type Base = { id: string; section: string; title: string; short: string; help?: string; grid?: boolean; audience?: string; lead?: string };
 
 export type SingleQuestion = Base & {
   kind: 'single';
@@ -54,7 +61,12 @@ export type MatrixQuestion = Base & {
   rows: { value: string; label: string }[];
   columns: Option[];
 };
-export type Question = SingleQuestion | MultiQuestion | MatrixQuestion;
+/**
+ * Partial ranking: tap order is the rank and people pick only what applies (a complete ranking is MultiQuestion.ranked).
+ * check: an extra yes/no tick box under the list, saved as answers[check.id] = 'ano' | 'ne'.
+ */
+export type RankQuestion = Base & { kind: 'rank'; options: Option[]; check?: { id: string; label: string; short: string } };
+export type Question = SingleQuestion | MultiQuestion | MatrixQuestion | RankQuestion;
 
 export const SHAPES: { shape: Shape; name: string; text: string }[] = [
   { shape: 'A', name: 'Klasický', text: 'Jako většina dnešních telefonů.' },
@@ -494,10 +506,25 @@ export type Answers = Record<string, AnswerValue>;
 export type OpenAnswers = Partial<Record<string, string>>;
 export type OpenQuestion = { id: string; label: string };
 
+/** In-person meeting at the end of a survey. */
+export type MeetingDef = {
+  /** Question ids shown next to each contact in the admin. */
+  cols: string[];
+  /** Admin KPI label for people who left a contact without a clear yes. */
+  maybeLabel: string;
+  /**
+   * People leave a phone number or an e-mail and an optional name, kept in open_answers (meet_contact, contact_name),
+   * so the email column stays free for the newsletter opt-in.
+   */
+  phoneOrEmail?: boolean;
+};
+
 /** Everything the admin, the CSV export and the server check need to know about one survey. */
 export type SurveyDef = {
   slug: string;
   title: string;
+  /** Heading in the admin. */
+  adminTitle: string;
   path: string;
   /** Short name in the admin switch. */
   name: string;
@@ -506,18 +533,20 @@ export type SurveyDef = {
   archivedQuestions?: Question[];
   sections: Record<string, string>;
   open: readonly OpenQuestion[];
-  /** Asks for an in-person meeting and e-mail at the end. */
-  meeting: boolean;
+  meeting: MeetingDef | null;
   /** Optional OPPO newsletter opt-in, independent of meeting invitations. */
   newsletter?: boolean;
   /** Question ids offered as filters in the admin. */
   filters: string[];
+  /** Branching: ids of the questions (and open questions) this person sees, in order, given what they answered so far. */
+  flow?: (answers: Answers) => string[];
 };
 
 export function isAnswered(q: Question, v: AnswerValue | undefined): boolean {
   if (v === undefined) return false;
   if (q.kind === 'single') return typeof v === 'string' && v.length > 0;
   if (q.kind === 'multi') return q.ranked ? isCompleteRanking(q, v) : Array.isArray(v) && v.length > 0;
+  if (q.kind === 'rank') return Array.isArray(v) && v.length > 0;
   return typeof v === 'object' && !Array.isArray(v) && q.rows.every((r) => typeof v[r.value] === 'string');
 }
 
@@ -540,6 +569,7 @@ export function formatAnswer(q: Question, v: AnswerValue | undefined): string {
       return `${rank}${labelOf(q, x)}`;
     }).join(q.ranked ? '; ' : ', ');
   }
+  if (q.kind === 'rank') return Array.isArray(v) ? v.map((x, i) => `${i + 1}. ${labelOf(q, x)}`).join('; ') : '';
   if (typeof v !== 'object' || Array.isArray(v)) return '';
   return q.rows.map((r) => `${r.label}: ${v[r.value] ? labelOf(q, v[r.value]) : '-'}`).join('; ');
 }
@@ -552,36 +582,64 @@ export function formatResponseAnswer(q: Question, answers: Answers): string {
   return formatAnswer(q, answers[q.id]);
 }
 
+/** Checks one question; writes the cleaned value into `answers` or returns what is wrong. */
+function cleanOne(q: Question, input: Record<string, unknown>, answers: Answers): string | undefined {
+  const v = input[q.id];
+  const missing = `Chybí odpověď: ${q.title}`;
+  if (q.kind === 'single') {
+    if (typeof v !== 'string' || !q.options.some((o) => o.value === v)) return missing;
+    answers[q.id] = v;
+  } else if (q.kind === 'multi' || q.kind === 'rank') {
+    if (q.kind === 'multi' && q.ranked && !isCompleteRanking(q, v)) return `Seřaďte všechny možnosti: ${q.title}`;
+    if (!Array.isArray(v) || v.length === 0) return missing;
+    const picked = [...new Set(v.filter((x): x is string => typeof x === 'string' && q.options.some((o) => o.value === x)))];
+    if (picked.length === 0) return missing;
+    if (q.kind === 'rank') {
+      answers[q.id] = picked;
+      if (q.check) answers[q.check.id] = input[q.check.id] === 'ano' ? 'ano' : 'ne';
+      return;
+    }
+    if (q.max && picked.length > q.max) return `Moc odpovědí: ${q.title}`;
+    const exclusive = picked.filter((x) => q.options.find((o) => o.value === x)?.exclusive);
+    answers[q.id] = exclusive.length ? [exclusive[0]] : picked;
+  } else {
+    const obj = (v && typeof v === 'object' && !Array.isArray(v) ? v : {}) as Record<string, unknown>;
+    const row: MatrixValue = {};
+    for (const r of q.rows) {
+      const cell = obj[r.value];
+      if (typeof cell !== 'string' || !q.columns.some((c) => c.value === cell)) return missing;
+      row[r.value] = cell;
+    }
+    answers[q.id] = row;
+  }
+}
+
 /**
  * Server-side check: keeps only known questions and options, and reports the first problem.
+ * With a flow, only the questions this person was actually shown are checked and kept.
  * Returns cleaned answers so nothing unexpected reaches the database.
  */
-export function cleanAnswers(raw: unknown, questions: Question[] = QUESTIONS): { answers: Answers; error?: string } {
+export function cleanAnswers(
+  raw: unknown,
+  questions: Question[] = QUESTIONS,
+  flow?: (answers: Answers) => string[],
+): { answers: Answers; error?: string } {
   const input = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const answers: Answers = {};
-  for (const q of questions) {
-    const v = input[q.id];
-    if (q.kind === 'single') {
-      if (typeof v !== 'string' || !q.options.some((o) => o.value === v)) return { answers, error: `Chybí odpověď: ${q.title}` };
-      answers[q.id] = v;
-    } else if (q.kind === 'multi') {
-      if (q.ranked && !isCompleteRanking(q, v)) return { answers, error: `Seřaďte všechny možnosti: ${q.title}` };
-      if (!Array.isArray(v) || v.length === 0) return { answers, error: `Chybí odpověď: ${q.title}` };
-      const picked = [...new Set(v.filter((x): x is string => typeof x === 'string' && q.options.some((o) => o.value === x)))];
-      if (picked.length === 0) return { answers, error: `Chybí odpověď: ${q.title}` };
-      if (q.max && picked.length > q.max) return { answers, error: `Moc odpovědí: ${q.title}` };
-      const exclusive = picked.filter((x) => q.options.find((o) => o.value === x)?.exclusive);
-      answers[q.id] = exclusive.length ? [exclusive[0]] : picked;
-    } else {
-      const obj = (v && typeof v === 'object' && !Array.isArray(v) ? v : {}) as Record<string, unknown>;
-      const row: MatrixValue = {};
-      for (const r of q.rows) {
-        const cell = obj[r.value];
-        if (typeof cell !== 'string' || !q.columns.some((c) => c.value === cell)) return { answers, error: `Chybí odpověď: ${q.title}` };
-        row[r.value] = cell;
-      }
-      answers[q.id] = row;
+  if (!flow) {
+    for (const q of questions) {
+      const error = cleanOne(q, input, answers);
+      if (error) return { answers, error };
     }
+    return { answers };
+  }
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  // The flow grows as branching answers are confirmed, so it is read again after every question.
+  for (let i = 0; ; i++) {
+    const ids = flow(answers).filter((id) => byId.has(id));
+    if (i >= ids.length) break;
+    const error = cleanOne(byId.get(ids[i])!, input, answers);
+    if (error) return { answers, error };
   }
   return { answers };
 }
@@ -606,11 +664,12 @@ export function cleanSource(raw: unknown): string {
 export const MAIN_SURVEY: SurveyDef = {
   slug: SURVEY.slug,
   title: SURVEY.title,
+  adminTitle: 'Dotazník: široké telefony',
   path: '/dotaznik',
   name: 'Hlavní dotazník',
   questions: QUESTIONS,
   sections: SECTIONS,
   open: OPEN_QUESTIONS,
-  meeting: true,
+  meeting: { cols: ['phone', 'age', 'pick', 'budget_next', 'deter'], maybeLabel: 'nechalo e-mail jen na vyzkoušení' },
   filters: ['phone', 'age', 'pick'],
 };

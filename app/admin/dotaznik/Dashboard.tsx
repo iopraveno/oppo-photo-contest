@@ -1,18 +1,19 @@
 import Link from 'next/link';
-import { formatResponseAnswer, formatAnswer, labelOf, type Question, type SurveyDef } from '@/lib/survey';
-import { ANKETA } from '@/lib/survey-anketa';
-import { MAIN_SURVEY } from '@/lib/survey';
+import { formatAnswer, formatResponseAnswer, labelOf, type Question, type SurveyDef } from '@/lib/survey';
 import {
+  SURVEY_VERSIONS,
+  adminHref,
   applyFilters,
   countMatrix,
   countOptions,
+  countRank,
   countSources,
   median,
   sourceLabel,
   type SurveyFilters,
   type SurveyResponse,
 } from '@/lib/survey-data';
-import { BarList, ORDINAL, SHAPE_COLORS, StackedRows, type Column } from './Charts';
+import { BarList, ORDINAL, RankList, SHAPE_COLORS, StackedRows, type Column } from './Charts';
 import s from './admin.module.css';
 
 const timeFmt = new Intl.DateTimeFormat('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' });
@@ -21,23 +22,36 @@ const TABLE_LIMIT = 300;
 
 const SETUP_SQL = `-- Supabase → SQL Editor → vložit obsah souboru supabase/dotaznik.sql → Run`;
 
-/** Sheet-like columns: one per question, matrix questions split into one column per row. */
-function tableColumns(questions: Question[]) {
-  return questions.flatMap((q) =>
-    q.kind === 'matrix'
-      ? q.rows.map((row) => ({
-          key: `${q.id}.${row.value}`,
-          head: `${q.short}: ${row.label}`,
-          wrap: false,
-          get: (r: SurveyResponse) => {
-            const v = r.answers[q.id];
-            const cell = v && typeof v === 'object' && !Array.isArray(v) ? v[row.value] : undefined;
-            return cell ? labelOf(q, cell) : '';
-          },
-        }))
-      : [{ key: q.id, head: q.short, wrap: q.kind === 'multi' || (q.kind === 'single' && q.style === 'list'), get: (r: SurveyResponse) => formatResponseAnswer(q, r.answers) }],
-  );
+type TableColumn = { key: string; head: string; wrap: boolean; get: (r: SurveyResponse) => string };
+
+/** Sheet-like columns: one per question, matrix questions split into one column per row, a ranking's tick box gets its own. */
+function tableColumns(questions: Question[]): TableColumn[] {
+  return questions.flatMap((q): TableColumn[] => {
+    if (q.kind === 'matrix') {
+      return q.rows.map((row) => ({
+        key: `${q.id}.${row.value}`,
+        head: `${q.short}: ${row.label}`,
+        wrap: false,
+        get: (r) => {
+          const v = r.answers[q.id];
+          const cell = v && typeof v === 'object' && !Array.isArray(v) ? v[row.value] : undefined;
+          return cell ? labelOf(q, cell) : '';
+        },
+      }));
+    }
+    const main: TableColumn = {
+      key: q.id,
+      head: q.short,
+      wrap: q.kind !== 'single' || q.style === 'list',
+      get: (r) => formatResponseAnswer(q, r.answers),
+    };
+    if (q.kind !== 'rank' || !q.check) return [main];
+    const id = q.check.id;
+    return [main, { key: id, head: q.check.short, wrap: false, get: (r) => (r.answers[id] === 'ano' ? 'Ano' : r.answers[id] === 'ne' ? 'Ne' : '') }];
+  });
 }
+
+const contactHref = (c: string) => (c.includes('@') ? `mailto:${c}` : `tel:${c.replace(/[^\d+]/g, '')}`);
 
 function FilterSelect({ name, label, value, options }: { name: string; label: string; value?: string; options: { value: string; label: string }[] }) {
   return (
@@ -54,6 +68,7 @@ function FilterSelect({ name, label, value, options }: { name: string; label: st
 }
 
 function QuestionCard({ q, rows }: { q: Question; rows: SurveyResponse[] }) {
+  const who = q.audience ? `Ptali jsme se: ${q.audience.charAt(0).toLowerCase()}${q.audience.slice(1)}. ` : '';
   if (q.kind === 'matrix') {
     const data = countMatrix(rows, q);
     const columns: Column[] =
@@ -63,8 +78,25 @@ function QuestionCard({ q, rows }: { q: Question; rows: SurveyResponse[] }) {
     return (
       <div className={`${s.qCard} ${s.wide}`}>
         <h3 className={s.qTitle}>{q.title}</h3>
-        <p className={s.qMeta}>{data[0]?.answered ?? 0} odpovědí, podíly v každém řádku dávají 100 %</p>
+        <p className={s.qMeta}>{who}{data[0]?.answered ?? 0} odpovědí, podíly v každém řádku dávají 100 %</p>
         <StackedRows rows={data} columns={columns} />
+      </div>
+    );
+  }
+  if (q.kind === 'rank') {
+    const { counts, answered } = countRank(rows, q);
+    const check = q.check;
+    const checked = check ? rows.filter((r) => Array.isArray(r.answers[q.id]) && r.answers[check.id] === 'ano').length : 0;
+    return (
+      <div className={s.qCard}>
+        <h3 className={s.qTitle}>{q.title}</h3>
+        <p className={s.qMeta}>{who}{answered} odpovědí, seřazeno podle toho, kolik lidí dalo zdroj na 1. místo. Procenta z respondentů.</p>
+        <RankList counts={counts} total={answered} />
+        {check && (
+          <p className={s.checkLine}>
+            {check.label}: <b>{answered ? Math.round((checked / answered) * 100) : 0} %</b> ({checked} z {answered})
+          </p>
+        )}
       </div>
     );
   }
@@ -75,7 +107,13 @@ function QuestionCard({ q, rows }: { q: Question; rows: SurveyResponse[] }) {
     <div className={s.qCard}>
       <h3 className={s.qTitle}>{q.title}</h3>
       <p className={s.qMeta}>
-        {answered} odpovědí{multi && q.ranked ? ', podíl odpovědí na 1. místě; celé pořadí je v tabulce a CSV' : multi ? `, mohli vybrat víc${q.max ? ` (nejvýš ${q.max})` : ''}: procenta z respondentů, nesčítají se do 100 %` : ''}
+        {who}
+        {answered} odpovědí
+        {multi && q.ranked
+          ? ', podíl odpovědí na 1. místě; celé pořadí je v tabulce a CSV'
+          : multi
+            ? `, mohli vybrat víc${q.max ? ` (nejvýš ${q.max})` : ''}: procenta z respondentů, nesčítají se do 100 %`
+            : ''}
       </p>
       <BarList counts={counts} total={answered} colors={colors} />
     </div>
@@ -95,31 +133,31 @@ export default function Dashboard({
   fullAdmin: boolean;
   siteUrl: string;
 }) {
-  const isAnketa = def.slug === ANKETA.slug;
-  const base = isAnketa ? '/admin/dotaznik?verze=anketa' : '/admin/dotaznik';
+  const version = SURVEY_VERSIONS.find((v) => v.def.slug === def.slug) ?? SURVEY_VERSIONS[0];
+  const base = adminHref(version.key);
   const q = (id: string) => def.questions.find((x) => x.id === id);
   const head = (
     <div className={s.head}>
       <nav className={s.switch} aria-label="Verze dotazníku">
-        {[MAIN_SURVEY, ANKETA].map((d) => (
+        {SURVEY_VERSIONS.map((v) => (
           <Link
-            key={d.slug}
-            href={d.slug === ANKETA.slug ? '/admin/dotaznik?verze=anketa' : '/admin/dotaznik'}
-            className={d.slug === def.slug ? s.switchOn : undefined}
-            aria-current={d.slug === def.slug ? 'page' : undefined}
+            key={v.def.slug}
+            href={adminHref(v.key)}
+            className={v.def.slug === def.slug ? s.switchOn : undefined}
+            aria-current={v.def.slug === def.slug ? 'page' : undefined}
           >
-            {d.name}
+            {v.def.name}
           </Link>
         ))}
       </nav>
-      <h1 className="section-title" style={{ marginBottom: 12 }}>{isAnketa ? 'Anketa: nový formát smartphonu' : 'Dotazník: široké telefony'}</h1>
+      <h1 className="section-title" style={{ marginBottom: 12 }}>{def.adminTitle}</h1>
       <p className="muted">
         Odpovědi z <Link href={def.path}>{def.path}</Link>. Každý influencer nebo médium může dostat vlastní odkaz, třeba{' '}
         <code>{siteUrl.replace(/^https?:\/\//, '')}{def.path}?src=jmeno</code>. Zdroj se pak ukáže v přehledu i v exportu.
       </p>
       <div className={s.links}>
-        <a href={`/api/admin/export?typ=${isAnketa ? 'anketa' : 'dotaznik'}`}>Export všech odpovědí (CSV pro Google Sheets a Excel)</a>
-        <Link href={def.path} target="_blank">Otevřít {isAnketa ? 'anketu' : 'dotazník'}</Link>
+        <a href={`/api/admin/export?typ=${version.exportType}`}>Export všech odpovědí (CSV pro Google Sheets a Excel)</a>
+        <Link href={def.path} target="_blank">Otevřít veřejnou stránku</Link>
         {fullAdmin && <Link href="/admin">Zpět do administrace</Link>}
       </div>
     </div>
@@ -144,6 +182,13 @@ export default function Dashboard({
   const last24 = rows.filter((r) => new Date(r.created_at).getTime() >= dayAgo).length;
   const meeting = rows.filter((r) => r.wants_meeting && r.email);
   const emailOnly = rows.filter((r) => !r.wants_meeting && r.email);
+  // Phone-or-e-mail surveys keep the meeting contact in open_answers (the email column is the newsletter there)
+  // and list everyone who left one, with their answer to the meeting question.
+  const meetContact = (r: SurveyResponse) => (def.meeting?.phoneOrEmail ? r.open_answers?.meet_contact : r.email) || '';
+  const contacts = def.meeting?.phoneOrEmail ? rows.filter((r) => r.open_answers?.meet_contact) : meeting;
+  const maybeCount = def.meeting?.phoneOrEmail ? contacts.filter((r) => !r.wants_meeting).length : emailOnly.length;
+  const meetingCount = def.meeting?.phoneOrEmail ? contacts.filter((r) => r.wants_meeting).length : meeting.length;
+  const newsletterCount = rows.filter((r) => r.contact_consent && r.email).length;
   const mobile = rows.filter((r) => r.device === 'mobil').length;
   const med = median(rows.map((r) => r.duration_s).filter((d): d is number => typeof d === 'number'));
   const sources = countSources(all);
@@ -181,12 +226,12 @@ export default function Dashboard({
         {def.meeting ? (
           <>
             <div className={s.kpi}>
-              <div className={s.kpiValue}>{meeting.length}</div>
+              <div className={s.kpiValue}>{meetingCount}</div>
               <div className={s.kpiLabel}>chce pozvat na setkání</div>
             </div>
             <div className={s.kpi}>
-              <div className={s.kpiValue}>{emailOnly.length}</div>
-              <div className={s.kpiLabel}>nechalo e-mail jen na vyzkoušení</div>
+              <div className={s.kpiValue}>{maybeCount}</div>
+              <div className={s.kpiLabel}>{def.meeting.maybeLabel}</div>
             </div>
           </>
         ) : (
@@ -201,14 +246,14 @@ export default function Dashboard({
         </div>
         {def.newsletter && (
           <div className={s.kpi}>
-            <div className={s.kpiValue}>{rows.filter((r) => r.contact_consent && r.email).length}</div>
+            <div className={s.kpiValue}>{newsletterCount}</div>
             <div className={s.kpiLabel}>chce dostávat novinky OPPO</div>
           </div>
         )}
       </div>
 
       <form className={s.filters} method="get">
-        {isAnketa && <input type="hidden" name="verze" value="anketa" />}
+        {version.key && <input type="hidden" name="verze" value={version.key} />}
         <FilterSelect name="src" label="Zdroj" value={filters.src} options={sources.map((x) => ({ value: x.value, label: x.label }))} />
         {def.filters.map((id) => (
           <FilterSelect key={id} name={id} label={q(id)?.short ?? id} value={filters[id]} options={opt(id)} />
@@ -222,7 +267,7 @@ export default function Dashboard({
       </form>
 
       {all.length === 0 ? (
-        <p className="muted">Zatím tu nejsou žádné odpovědi. Jakmile někdo {isAnketa ? 'anketu' : 'dotazník'} odešle, objeví se tady.</p>
+        <p className="muted">Zatím tu nejsou žádné odpovědi. Jakmile někdo odpoví, objeví se tady.</p>
       ) : (
         <>
           <section className={s.section}>
@@ -275,29 +320,52 @@ export default function Dashboard({
 
           {def.meeting && (
             <section className={s.section}>
-              <h2 className={s.sectionTitle}>Chtějí pozvat na osobní setkání ({meeting.length})</h2>
+              <h2 className={s.sectionTitle}>
+                {def.meeting.phoneOrEmail ? `Nechali kontakt kvůli setkání (${contacts.length})` : `Chtějí pozvat na osobní setkání (${contacts.length})`}
+              </h2>
               <p className="muted small">
-                Lidé, kteří chtějí na setkání a dali souhlas s kontaktováním. Podle odpovědí si vyberte, koho pozvete.
+                {def.meeting.phoneOrEmail
+                  ? 'Lidé, kteří chtějí na setkání nebo odpověděli „možná“, nechali kontakt a dali souhlas. Podle odpovědí si vyberte, koho pozvete.'
+                  : 'Lidé, kteří chtějí na setkání a dali souhlas s kontaktováním. Podle odpovědí si vyberte, koho pozvete.'}
               </p>
-              {meeting.length === 0 ? (
+              {contacts.length === 0 ? (
                 <p className="muted">Zatím nikdo.</p>
               ) : (
                 <div className={s.tableWrap}>
                   <table className={s.table}>
                     <thead>
                       <tr>
-                        <th>E-mail</th><th>Odesláno</th><th>Telefon</th><th>Věk</th><th>Vybral(a) by</th><th>Rozpočet</th><th>Odrazuje</th><th>Zdroj</th>
+                        <th>{def.meeting.phoneOrEmail ? 'Kontakt' : 'E-mail'}</th>
+                        {def.meeting.phoneOrEmail && (
+                          <>
+                            <th>Jméno</th>
+                            <th>Setkání</th>
+                          </>
+                        )}
+                        <th>Odesláno</th>
+                        {def.meeting.cols.map((id) => <th key={id}>{q(id)?.short ?? id}</th>)}
+                        <th>Zdroj</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {meeting.map((r) => (
+                      {contacts.map((r) => (
                         <tr key={r.id}>
-                          <td><a href={`mailto:${r.email}`}>{r.email}</a></td>
+                          <td><a href={contactHref(meetContact(r))}>{meetContact(r)}</a></td>
+                          {def.meeting!.phoneOrEmail && (
+                            <>
+                              <td>{r.open_answers?.contact_name ?? ''}</td>
+                              <td>{r.wants_meeting ? <span className={s.yes}>Ano</span> : 'Možná'}</td>
+                            </>
+                          )}
                           <td>{when(r.created_at)}</td>
-                          {['phone', 'age', 'pick', 'budget_next'].map((id) => (
-                            <td key={id}>{q(id) ? formatAnswer(q(id)!, r.answers[id]) : ''}</td>
-                          ))}
-                          <td className={s.wrapCell}>{q('deter') ? formatAnswer(q('deter')!, r.answers.deter) : ''}</td>
+                          {def.meeting!.cols.map((id) => {
+                            const x = q(id);
+                            return (
+                              <td key={id} className={x && x.kind !== 'single' ? s.wrapCell : undefined}>
+                                {x ? formatAnswer(x, r.answers[id]) : ''}
+                              </td>
+                            );
+                          })}
                           <td>{sourceLabel(r.src)}</td>
                         </tr>
                       ))}
@@ -305,7 +373,7 @@ export default function Dashboard({
                   </table>
                 </div>
               )}
-              {emailOnly.length > 0 && (
+              {!def.meeting.phoneOrEmail && emailOnly.length > 0 && (
                 <p className="small muted">
                   Dalších {emailOnly.length} lidí nechalo e-mail jen pro případné vyzkoušení. Najdete je v exportu CSV.
                 </p>
@@ -328,7 +396,13 @@ export default function Dashboard({
                     <th>Zařízení</th>
                     {columns.map((c) => <th key={c.key}>{c.head}</th>)}
                     {def.meeting && <th>Setkání</th>}
-                    {def.newsletter && <><th>E-mail pro novinky</th><th>Souhlas s novinkami</th></>}
+                    {def.meeting?.phoneOrEmail && <th>Kontakt na setkání</th>}
+                    {def.newsletter && (
+                      <>
+                        <th>E-mail pro novinky</th>
+                        <th>Souhlas s novinkami</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -341,7 +415,13 @@ export default function Dashboard({
                         <td key={c.key} className={c.wrap ? s.wrapCell : undefined}>{c.get(r)}</td>
                       ))}
                       {def.meeting && <td>{r.wants_meeting ? <span className={s.yes}>Ano</span> : r.wants_meeting === false ? 'Ne' : ''}</td>}
-                      {def.newsletter && <><td>{r.contact_consent ? r.email : ''}</td><td>{r.contact_consent ? 'Ano' : 'Ne'}</td></>}
+                      {def.meeting?.phoneOrEmail && <td>{r.open_answers?.meet_contact ?? ''}</td>}
+                      {def.newsletter && (
+                        <>
+                          <td>{r.contact_consent ? r.email : ''}</td>
+                          <td>{r.contact_consent ? 'Ano' : 'Ne'}</td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -28,8 +28,8 @@ export default async function Image() {
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: 640, padding: '0 0 0 72px' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={dataUrl(logo, 'image/png')} alt="" height={28} style={{ height: 28, marginBottom: 56, alignSelf: 'flex-start' }} />
-          <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.04, letterSpacing: -2.5 }}>{ANKETA_TEXT.title}</div>
-          <div style={{ fontSize: 28, fontWeight: 500, marginTop: 28, color: '#5b675f' }}>Krátká anketa OPPO, 2-3 minuty.</div>
+          <div style={{ fontSize: 60, fontWeight: 700, lineHeight: 1.06, letterSpacing: -2 }}>{ANKETA_TEXT.title}</div>
+          <div style={{ fontSize: 28, fontWeight: 500, marginTop: 28, color: '#5b675f' }}>Krátký průzkum, zabere 2-4 minuty.</div>
           <div style={{ display: 'flex', marginTop: 40 }}>
             <div style={{ height: 60, padding: '0 30px', borderRadius: 30, background: '#2d683d', color: '#fff', fontSize: 26, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
               {`${SITE_URL.replace(/^https?:\/\/(www\.)?/, '')}/dotaznik/anketa`}

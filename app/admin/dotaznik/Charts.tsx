@@ -1,5 +1,5 @@
 // Server-rendered charts for /admin/dotaznik. Plain HTML bars: hover shows the exact numbers.
-import type { Count } from '@/lib/survey-data';
+import type { Count, RankCount } from '@/lib/survey-data';
 import s from './admin.module.css';
 
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
@@ -26,6 +26,52 @@ export function BarList({ counts, total, colors }: { counts: Count[]; total: num
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** Two shades of the single-series green: the dark part (ranked first) sits inside the light part (picked at all). */
+const RANK_FIRST = '#2d683d';
+const RANK_ANY = '#b3d4bc';
+const avgFmt = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 });
+
+/** Ranking question: per item, the share who put it first and the share who picked it at all, both out of all who answered. */
+export function RankList({ counts, total }: { counts: RankCount[]; total: number }) {
+  return (
+    <div>
+      <div className={s.legend}>
+        <span className={s.legendItem}>
+          <span className={s.swatch} style={{ background: RANK_FIRST }} />
+          Na 1. místě
+        </span>
+        <span className={s.legendItem}>
+          <span className={s.swatch} style={{ background: RANK_ANY }} />
+          Vybrali vůbec
+        </span>
+      </div>
+      <div className={s.bars}>
+        {counts.map((c) => {
+          const first = pct(c.first, total);
+          const any = pct(c.count, total);
+          const avg = c.avgPos === null ? '-' : avgFmt.format(c.avgPos);
+          return (
+            <div
+              key={c.value}
+              className={`${s.barRow} ${s.rankRow}`}
+              title={`${c.label}: na 1. místě ${c.first} z ${total} (${first} %), vybralo ${c.count} (${any} %), průměrné pořadí ${avg}`}
+            >
+              <span className={s.barLabel}>{c.label}</span>
+              <span className={`${s.barTrack} ${s.rankTrack}`}>
+                <span className={s.bar} style={{ width: `${any}%`, background: RANK_ANY }} />
+                <span className={s.bar} style={{ width: `${first}%`, background: RANK_FIRST }} />
+              </span>
+              <span className={s.barValue}>
+                <b>{first} %</b> <span className={s.barCount}>/ {any} %</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

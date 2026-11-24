@@ -3,12 +3,27 @@
 import { headers } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/env';
+import { isDisposableEmail } from '@/lib/disposable';
 import { clientIp, hashIp } from '@/lib/security';
-import { cleanAnswers, cleanSource } from '@/lib/survey';
-import { ANKETA } from '@/lib/survey-anketa';
+import { cleanAnswers, cleanOpen, cleanSource } from '@/lib/survey';
+import { ANKETA, contactKind, otherKey } from '@/lib/survey-anketa';
 import { ANKETA_CONSENT_TEXT, ANKETA_CONSENT_VERSION, cleanAnketaContact } from '@/lib/anketa-contact';
 
-export type AnketaInput = { answers: unknown; src?: string; startedAt?: number; website?: string; newsletter?: boolean; email?: string; consent?: boolean };
+export type AnketaInput = {
+  answers: unknown;
+  open?: unknown;
+  /** Meeting question: phone or e-mail, optional name, consent to be contacted about the meeting. */
+  meetContact?: string;
+  meetName?: string;
+  meetConsent?: boolean;
+  /** Optional OPPO newsletter at the end, with its own consent. */
+  newsletter?: boolean;
+  email?: string;
+  consent?: boolean;
+  src?: string;
+  startedAt?: number;
+  website?: string;
+};
 export type AnketaResult = { ok: true } | { ok: false; error: string };
 
 // Shared with the main survey's table; events and offices share one IP, so the limit is generous.
@@ -17,10 +32,48 @@ const MAX_PER_IP_PER_HOUR = 30;
 export async function submitAnketa(input: AnketaInput): Promise<AnketaResult> {
   if (input.website) return { ok: true }; // honeypot
 
-  const { answers, error } = cleanAnswers(input.answers, ANKETA.questions);
+  // Only the questions on this person's path are checked and kept.
+  const { answers, error } = cleanAnswers(input.answers, ANKETA.questions, ANKETA.flow);
   if (error) return { ok: false, error: `${error} Doplňte ji prosím a odešlete znovu.` };
-  const contact = cleanAnketaContact(input);
-  if (contact.error) return { ok: false, error: contact.error };
+
+  // Text of a "something else" option counts only if that option is still picked.
+  const open: Record<string, string> = {};
+  const cleanedOpen = cleanOpen(input.open, ANKETA.open);
+  for (const [k, v] of Object.entries(cleanedOpen)) if (v) open[k] = v.slice(0, k === 'message' ? 1000 : 200);
+  for (const q of ANKETA.questions) {
+    if (q.kind === 'matrix') continue;
+    const other = q.options.find((o) => o.other)?.value;
+    const v = answers[q.id];
+    const picked = other !== undefined && (v === other || (Array.isArray(v) && v.includes(other)));
+    if (!picked) delete open[otherKey(q.id)];
+  }
+
+  // Meeting contact: required for "yes", optional for "maybe", ignored otherwise.
+  const meet = typeof answers.meet === 'string' ? answers.meet : null;
+  const meetContact = meet === 'ano' || meet === 'mozna' ? String(input.meetContact || '').trim().slice(0, 120) : '';
+  const kind = meetContact ? contactKind(meetContact) : null;
+  if (meet === 'ano' && !meetContact) return { ok: false, error: 'Abychom vás mohli pozvat, nechte nám prosím telefon nebo e-mail.' };
+  if (meetContact) {
+    if (!kind) return { ok: false, error: 'Zkontrolujte prosím kontakt. Napište telefonní číslo nebo e-mail.' };
+    if (kind === 'email' && isDisposableEmail(meetContact.toLowerCase())) {
+      return { ok: false, error: 'Jednorázové e-maily nepodporujeme. Použijte prosím svůj běžný e-mail nebo telefon.' };
+    }
+    if (input.meetConsent !== true) return { ok: false, error: 'Bez souhlasu vás kvůli setkání nemůžeme kontaktovat. Zaškrtněte ho, nebo kontakt smažte.' };
+    open.meet_contact = kind === 'email' ? meetContact.toLowerCase() : meetContact;
+    const name = String(input.meetName || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    if (name) open.contact_name = name;
+    open.meet_consent_at = new Date().toISOString();
+  }
+
+  // Newsletter: skipping never stores an e-mail, even a previously typed one.
+  const newsletter = cleanAnketaContact(input);
+  if (newsletter.error) return { ok: false, error: newsletter.error };
+  if (newsletter.consent) {
+    open.newsletter_consent_version = ANKETA_CONSENT_VERSION;
+    open.newsletter_consent_text = ANKETA_CONSENT_TEXT;
+    open.newsletter_consent_at = new Date().toISOString();
+  }
+
   if (!isSupabaseConfigured()) return { ok: false, error: 'Web ještě není napojený na databázi.' };
 
   const ipHash = hashIp(await clientIp());
@@ -40,13 +93,12 @@ export async function submitAnketa(input: AnketaInput): Promise<AnketaResult> {
   const { error: dbError } = await supabase.from('survey_responses').insert({
     survey: ANKETA.slug,
     answers,
-    open_answers: contact.consent ? {
-      newsletter_consent_version: ANKETA_CONSENT_VERSION,
-      newsletter_consent_text: ANKETA_CONSENT_TEXT,
-      newsletter_consent_at: new Date().toISOString(),
-    } : {},
-    email: contact.email,
-    contact_consent: contact.consent,
+    open_answers: open,
+    // email + contact_consent = newsletter opt-in; the meeting contact lives in open_answers.
+    email: newsletter.email,
+    contact_consent: newsletter.consent,
+    // null = not asked (people who are not interested skip the meeting question)
+    wants_meeting: meet === null ? null : meet === 'ano',
     src: cleanSource(input.src),
     duration_s: seconds !== null && seconds >= 0 && seconds < 3 * 60 * 60 ? seconds : null,
     device: /Mobi|Android|iPhone/i.test(ua) ? 'mobil' : 'pocitac',

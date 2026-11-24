@@ -9,8 +9,27 @@ const compile = (filename) => ts.transpileModule(fs.readFileSync(filename, 'utf8
 }).outputText;
 require.extensions['.ts'] = (module, filename) => module._compile(compile(filename), filename);
 const contact = require('../lib/anketa-contact.ts');
-const { ANKETA } = require('../lib/survey-anketa.ts');
-const answers = Object.fromEntries(ANKETA.questions.map(q => [q.id, q.kind === 'single' ? q.options[0].value : q.ranked ? ['cena', 'ergonomie_design', 'fotoaparaty', 'baterie'] : [q.options[0].value]]));
+const anketa = require('../lib/survey-anketa.ts');
+const { ANKETA, anketaFlow } = anketa;
+
+/** Walks the poll like a person would: first option everywhere, except where `pick` says otherwise. */
+function walk(pick = {}) {
+  const answers = {};
+  const byId = new Map(ANKETA.questions.map((q) => [q.id, q]));
+  for (let i = 0; ; i++) {
+    const ids = anketaFlow(answers).filter((id) => byId.has(id));
+    if (i >= ids.length) break;
+    const q = byId.get(ids[i]);
+    if (pick[q.id] !== undefined) answers[q.id] = pick[q.id];
+    else if (q.kind === 'single') answers[q.id] = q.options[0].value;
+    else answers[q.id] = [q.options[0].value];
+    if (q.kind === 'rank' && q.check) answers[q.check.id] = 'ne';
+  }
+  return answers;
+}
+
+// Heard of wide phones, interested, no meeting.
+const answers = walk({ meet: 'ne' });
 
 function actionHarness() {
   const inserts = [];
@@ -22,9 +41,10 @@ function actionHarness() {
     'next/headers': { headers: async () => new Headers({ 'user-agent': 'test' }) },
     '@/lib/supabase/admin': { createAdminClient: () => client },
     '@/lib/env': { isSupabaseConfigured: () => true },
+    '@/lib/disposable': require('../lib/disposable.ts'),
     '@/lib/security': { clientIp: async () => '127.0.0.1', hashIp: () => 'test-hash' },
     '@/lib/survey': require('../lib/survey.ts'),
-    '@/lib/survey-anketa': { ANKETA },
+    '@/lib/survey-anketa': anketa,
     '@/lib/anketa-contact': contact,
   };
   const filename = path.resolve(__dirname, '../app/dotaznik/anketa/actions.ts');
@@ -60,6 +80,7 @@ test('server anonymous branch stores all answers and no contact or consent metad
   assert.deepEqual(inserts[0].answers, answers);
   assert.equal(inserts[0].email, null);
   assert.equal(inserts[0].contact_consent, false);
+  assert.equal(inserts[0].wants_meeting, false);
   assert.deepEqual(inserts[0].open_answers, {});
 });
 
@@ -83,9 +104,48 @@ test('invalid opt-in, missing answers, or honeypot never writes to the database'
   assert.equal(inserts.length, 0);
 });
 
-test('older clients may submit anonymous answers without newsletter fields', async () => {
+test('clients may submit anonymous answers without newsletter fields', async () => {
   const { submit, inserts } = actionHarness();
   assert.deepEqual(await submit({ answers }), { ok: true });
   assert.equal(inserts[0].email, null);
   assert.equal(inserts[0].contact_consent, false);
+});
+
+test('each branch keeps only its own questions', async () => {
+  const { submit, inserts } = actionHarness();
+  const notInterested = walk({ interest: 'ne' });
+  const firstTime = walk({ aware: 'ne', meet: 'ne' });
+  assert.ok(!('meet' in notInterested) && 'not_reason' in notInterested && !('channels' in notInterested));
+  assert.ok('appeal' in firstTime && !('channels_rank' in firstTime) && !('interest' in firstTime));
+  // Answers left over from a branch the person later left are dropped on the server.
+  assert.deepEqual(await submit({ answers: { ...firstTime, benefits: ['video'], interest: 'ano' } }), { ok: true });
+  assert.deepEqual(inserts[0].answers, firstTime);
+  assert.deepEqual(await submit({ answers: notInterested }), { ok: true });
+  assert.equal(inserts[1].wants_meeting, null);
+});
+
+test('meeting contact: required for yes, needs its own consent, stays out of the newsletter columns', async () => {
+  const { submit, inserts } = actionHarness();
+  const yes = walk({ meet: 'ano' });
+  assert.equal((await submit({ answers: yes })).ok, false);
+  assert.equal((await submit({ answers: yes, meetContact: '777 123 456' })).ok, false);
+  assert.equal((await submit({ answers: yes, meetContact: 'nonsense', meetConsent: true })).ok, false);
+  assert.deepEqual(await submit({ answers: yes, meetContact: '777 123 456', meetName: ' Jana  Nová ', meetConsent: true }), { ok: true });
+  const row = inserts[0];
+  assert.equal(row.wants_meeting, true);
+  assert.equal(row.open_answers.meet_contact, '777 123 456');
+  assert.equal(row.open_answers.contact_name, 'Jana Nová');
+  assert.equal(row.email, null);
+  assert.equal(row.contact_consent, false);
+  // "Raději ne" ignores a contact typed earlier.
+  assert.deepEqual(await submit({ answers: walk({ meet: 'ne' }), meetContact: 'a@b.cz', meetConsent: true }), { ok: true });
+  assert.equal(inserts[1].open_answers.meet_contact, undefined);
+});
+
+test('"something else" text is kept only when that option is picked', async () => {
+  const { submit, inserts } = actionHarness();
+  const withOther = walk({ meet: 'ne', benefits: ['video', 'jine'] });
+  await submit({ answers: withOther, open: { benefits_jine: 'Dvě aplikace vedle sebe', concerns_jine: 'Nepatří sem' } });
+  assert.equal(inserts[0].open_answers.benefits_jine, 'Dvě aplikace vedle sebe');
+  assert.equal(inserts[0].open_answers.concerns_jine, undefined);
 });

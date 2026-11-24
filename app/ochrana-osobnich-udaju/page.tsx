@@ -153,21 +153,22 @@ export default function PrivacyPage() {
 
         <h2 id="dotaznik">10. Dotazník o širokých telefonech</h2>
         <p>
-          Dotazník na stránce <Link href="/dotaznik">/dotaznik</Link> je anonymní. Ukládáme odpovědi, odkud jsi na dotazník přišel
+          Dotazník na stránce <Link href="/dotaznik">/dotaznik</Link> i kratší anketa na stránce{' '}
+          <Link href="/dotaznik/anketa">/dotaznik/anketa</Link> jsou anonymní. Ukládáme odpovědi, odkud jsi na dotazník přišel
           (označení v odkazu), zda vyplňuješ z mobilu nebo počítače, jak dlouho vyplnění trvalo a otisk IP adresy (stejně nevratný jako
           u hlasování), abychom zabránili hromadnému odesílání. Odpovědi vyhodnocujeme souhrnně, abychom pochopili, jaký telefon lidé
           chtějí. Základem je náš oprávněný zájem (čl. 6 odst. 1 písm. f) GDPR).
         </p>
         <p>
-          E-mail je nepovinný a ukládáme ho jen se tvým souhlasem (čl. 6 odst. 1 písm. a) GDPR). Napíšeme ti na něj jen kvůli tomuto
-          průzkumu: pozvánku na osobní setkání, pokud jsi o ni požádal(a), nebo nabídku vyzkoušení. Souhlas můžeš kdykoli odvolat na{' '}
-          {mail}. E-mail smažeme po skončení průzkumu, odpovědi bez e-mailu si můžeme ponechat pro další vyhodnocení. Lidem mladším
-          18 let kontaktní údaje vůbec nenabízíme.
+          Kontakt je nepovinný a ukládáme ho jen se tvým souhlasem (čl. 6 odst. 1 písm. a) GDPR). V dotazníku je to e-mail, v anketě
+          telefon nebo e-mail a případně jméno. Ozveme se ti jen kvůli tomuto průzkumu: s pozvánkou na osobní setkání, pokud o ni
+          stojíš, nebo s nabídkou vyzkoušení. Souhlas můžeš kdykoli odvolat na {mail}. Kontakt smažeme po skončení průzkumu, odpovědi
+          bez kontaktu si můžeme ponechat pro další vyhodnocení. Lidem mladším 18 let kontaktní údaje vůbec nenabízíme.
         </p>
 
         <h2 id="novinky">11. Nepovinný odběr novinek OPPO v anketě</h2>
         <p>
-          Na konci <Link href="/dotaznik/anketa">ankety o novém formátu smartphonu</Link> si můžeš dobrovolně zvolit odběr
+          Na konci <Link href="/dotaznik/anketa">ankety o telefonech se širším displejem</Link> si můžeš dobrovolně zvolit odběr
           novinek, nabídek a pozvánek týkajících se OPPO. Anketu lze dokončit bez e-mailu i bez souhlasu s odběrem.
           K odběru tě přihlásíme pouze po zadání e-mailu a samostatném zaškrtnutí souhlasu.
         </p>
