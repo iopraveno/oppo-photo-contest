@@ -5,7 +5,7 @@ import { isAnswered, type Answers, type AnswerValue, type Option, type Question,
 import { ANKETA, ANKETA_TEXT, MESSAGE, anketaFlow, anketaLength, contactKind, otherKey } from '@/lib/survey-anketa';
 import { ANKETA_CONSENT_TEXT, cleanAnketaContact } from '@/lib/anketa-contact';
 import { submitAnketa } from './actions';
-import PhoneIllustration from './PhoneIllustration';
+import FormatCompare from './FormatCompare';
 import s from './anketa.module.css';
 
 const DRAFT_KEY = `oppo-anketa-${ANKETA.slug}`;
@@ -174,7 +174,7 @@ function Rank({
   );
 }
 
-export default function Anketa({ src, photos, logoSrc }: { src: string; photos: string[]; logoSrc: string | null }) {
+export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string | null }) {
   const [answers, setAnswers] = useState<Answers>({});
   const [open, setOpen] = useState<Open>({});
   const [contact, setContact] = useState<Contact>(NO_CONTACT);
@@ -336,21 +336,6 @@ export default function Anketa({ src, photos, logoSrc }: { src: string; photos: 
     window.scrollTo({ top: 0 });
   }
 
-  const photo = (
-    <figure className={s.visual}>
-      {photos.length ? (
-        <div className={s.photos} data-count={photos.length}>
-          {photos.map((p, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={p} src={p} alt={i === 0 ? 'Telefon se širším displejem v ruce, pohled zepředu' : ''} loading={i === 0 ? 'eager' : 'lazy'} />
-          ))}
-        </div>
-      ) : (
-        <PhoneIllustration className={s.illustration} />
-      )}
-    </figure>
-  );
-
   const nextButton = (i: number, enabled: boolean) => (
     <div className={s.actions}>
       <button type="button" className={s.secondary} disabled={!enabled} onClick={() => reveal(i + 2)}>
@@ -372,29 +357,23 @@ export default function Anketa({ src, photos, logoSrc }: { src: string; photos: 
         </header>
 
         {done ? (
-          <section className={s.hero}>
-            <div className={s.heroText}>
-              <h1 className={s.h1}>{ANKETA_TEXT.thanksTitle}</h1>
-              <p className={s.lead}>{cz(ANKETA_TEXT.thanks)}</p>
-              {done.contact && <p className={s.time}>{cz(ANKETA_TEXT.thanksContact)}</p>}
-            </div>
-            {photo}
+          <section className={s.thanks}>
+            <h1 className={s.h1}>{ANKETA_TEXT.thanksTitle}</h1>
+            <p className={s.lead}>{cz(ANKETA_TEXT.thanks)}</p>
+            {done.contact && <p className={s.time}>{cz(ANKETA_TEXT.thanksContact)}</p>}
           </section>
         ) : (
           <>
             <section className={s.hero}>
-              <div className={s.heroText}>
+              <div className={s.heroTitle}>
                 <h1 className={s.h1}>{cz(ANKETA_TEXT.title)}</h1>
                 <p className={s.lead}>{cz(ANKETA_TEXT.intro)}</p>
-                <p className={s.time}>{cz(ANKETA_TEXT.time)}</p>
               </div>
-              {photo}
-            </section>
-
-            <section className={`${s.block} ${s.format}`}>
-              <PhoneIllustration className={s.formatFigure} compact />
-              <div>
-                <p className={s.formatNote}>{cz(ANKETA_TEXT.formatNote)}</p>
+              <div className={s.heroFigure}>
+                <FormatCompare note={cz(ANKETA_TEXT.formatNote)} />
+              </div>
+              <div className={s.heroStart}>
+                <p className={s.time}>{cz(ANKETA_TEXT.time)}</p>
                 <div className={s.actions}>
                   <button type="button" className={s.primary} onClick={start}>
                     {ANKETA_TEXT.start}

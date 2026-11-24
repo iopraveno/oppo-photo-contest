@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og';
 import { SITE_URL } from '@/lib/config';
 import { ANKETA_TEXT } from '@/lib/survey-anketa';
 
-// Share preview for /dotaznik/anketa: the poll's own light look with the phone photo.
+// Share preview for /dotaznik/anketa: the poll's light look with the same two phone outlines as the page.
 export const alt = ANKETA_TEXT.title;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
@@ -15,12 +15,28 @@ const read = (path: string) => readFile(join(process.cwd(), 'public', path));
 const dataUrl = (buf: Buffer, type: string) => `data:${type};base64,${buf.toString('base64')}`;
 
 export default async function Image() {
-  const [medium, bold, logo, photo] = await Promise.all([
+  const [medium, bold, logo] = await Promise.all([
     read('fonts/og/OPPOSans-500.ttf'),
     read('fonts/og/OPPOSans-700.ttf'),
     read('img/oppo-logo.png'),
-    read('img/og/anketa-wide.jpg'),
   ]);
+  const H = 330;
+  const phone = (ratio: number, name: string, note: string) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div
+        style={{
+          display: 'flex', width: Math.round(H / ratio), height: H, padding: 9,
+          border: '3px solid #0e1a13', borderRadius: 40, background: '#fff',
+        }}
+      >
+        <div style={{ display: 'flex', flex: 1, justifyContent: 'center', paddingTop: 20, borderRadius: 31, background: '#eaf3ec' }}>
+          <div style={{ width: 11, height: 11, borderRadius: 6, background: '#0e1a13' }} />
+        </div>
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 700, marginTop: 22 }}>{name}</div>
+      <div style={{ fontSize: 21, fontWeight: 500, color: '#5b675f', marginTop: 2 }}>{note}</div>
+    </div>
+  );
 
   return new ImageResponse(
     (
@@ -36,10 +52,15 @@ export default async function Image() {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', flex: 1, padding: '40px 48px 0 0' }}>
-          <div style={{ display: 'flex', width: 500, height: 560, borderRadius: '32px 32px 0 0', background: '#fff', overflow: 'hidden', alignItems: 'flex-end', justifyContent: 'center' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={dataUrl(photo, 'image/jpeg')} alt="" width={560} height={554} style={{ width: 560, height: 554 }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '0 56px 0 0' }}>
+          <div
+            style={{
+              display: 'flex', alignItems: 'flex-end', gap: 56, padding: '44px 52px 34px',
+              background: '#fff', border: '1.5px solid #dce3dd', borderRadius: 32,
+            }}
+          >
+            {phone(2.05, 'Běžný telefon', 'zhruba 20:9')}
+            {phone(1.55, 'Široký telefon', 'zhruba 16:10')}
           </div>
         </div>
       </div>

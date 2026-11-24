@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { anketaPhotos, img } from '@/lib/images';
+import { img } from '@/lib/images';
 import { cleanSource } from '@/lib/survey';
 import { ANKETA_TEXT } from '@/lib/survey-anketa';
 import Anketa from './Anketa';
@@ -21,5 +21,5 @@ type Search = Promise<{ src?: string; utm_source?: string }>;
 
 export default async function AnketaPage({ searchParams }: { searchParams: Search }) {
   const { src, utm_source } = await searchParams;
-  return <Anketa src={cleanSource(src || utm_source)} photos={anketaPhotos()} logoSrc={img('oppo-logo.png')} />;
+  return <Anketa src={cleanSource(src || utm_source)} logoSrc={img('oppo-logo.png')} />;
 }

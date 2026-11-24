@@ -21,8 +21,3 @@ export function themePhotos(slug: string): string[] {
     .sort((a, b) => a.length - b.length || a.localeCompare(b))
     .map((f) => `/img/${f}`);
 }
-
-/** Photos of the wide phone for the test survey: public/img/anketa/*.jpg in file-name order. */
-export function anketaPhotos(): string[] {
-  return [...files].filter((f) => /^anketa\/[^/]+\.(jpe?g|png|webp)$/i.test(f)).sort().map((f) => `/img/${f}`);
-}
