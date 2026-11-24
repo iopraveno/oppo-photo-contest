@@ -89,6 +89,24 @@
 /* ---------- Questions ---------- */
 .questionBlock { padding: 20px 0; border-bottom: 1px solid #f0f0f4; scroll-margin-top: 24px; }
 .questionBlock:last-of-type { border-bottom: none; }
+.reveal { animation: reveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes reveal { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* Multiple choice, ranking and the meeting e-mail wait for this before the next question opens */
+.nextRow { margin: 14px 0 0 38px; }
+.nextBtn {
+  padding: 10px 22px;
+  border: 1.5px solid var(--dark-green);
+  border-radius: 100px;
+  background: #fff;
+  color: var(--dark-green);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.nextBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .questionMissing .qText { color: var(--err); }
 .questionMissing .qNumber { color: var(--err); }
 .qHeader { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
@@ -230,11 +248,13 @@
 .option:focus-within,
 .rankItem:focus-visible,
 .standaloneCheck:focus-within,
-.submitBtn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.submitBtn:focus-visible,
+.nextBtn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 @media (hover: hover) {
   .option:not(.optionOn):not(.optionDisabled):hover,
   .rankItem:not(.rankSelected):hover { border-color: var(--mint); background: #f8fdfa; }
+  .nextBtn:not(:disabled):hover { background: var(--light-green); }
   .submitBtn:not(:disabled):hover { background: #144a2e; transform: translateY(-2px); box-shadow: 0 12px 24px -10px rgba(27, 94, 58, 0.55); }
 }
 
@@ -246,7 +266,7 @@
   .twoCol { grid-template-columns: 1fr; }
   /* Full width for the answers on a narrow screen */
   .options, .rankList, .indent, .contactFields, .standaloneCheck { margin-left: 0; }
-  .qLead, .qHint { margin-left: 0; }
+  .qLead, .qHint, .nextRow { margin-left: 0; }
   .qHeader { gap: 6px; }
   .qNumber { min-width: 0; }
   .qHint { margin-top: -4px; }
@@ -258,5 +278,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .root *, .root *::before, .root *::after { transition: none !important; }
+  .root *, .root *::before, .root *::after { animation: none !important; transition: none !important; }
 }

@@ -8,15 +8,15 @@ import { submitAnketa } from './actions';
 import FormatCompare from './FormatCompare';
 import s from './anketa.module.css';
 
-// One long form like the original brief: the questions of the current branch are all on the page,
-// and the next branch appears as soon as the question that decides it is answered.
+// Questions open one below another as people answer, and the page slides down to each new one.
+// A different answer to a branching question closes what no longer applies and opens the new branch.
 const DRAFT_KEY = `oppo-anketa-${ANKETA.slug}`;
 const DONE_KEY = `${DRAFT_KEY}-hotovo`;
 
 type Open = Record<string, string>;
 type Meet = { email: string; name: string; consent: boolean };
 // Contact details and consents stay in memory only, never in the browser draft.
-type Draft = { answers: Answers; open: Open; startedAt: number };
+type Draft = { answers: Answers; open: Open; reached: number; startedAt: number };
 
 const NO_MEET: Meet = { email: '', name: '', consent: false };
 const BY_ID = new Map(ANKETA.questions.map((q) => [q.id, q]));
@@ -48,6 +48,11 @@ const store = {
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const wantsMeeting = (meet: AnswerValue | undefined) => meet === 'ano' || meet === 'mozna';
+const firstDiff = (a: string[], b: string[]) => {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+};
 
 /** Czech typesetting: a one-letter word (v, s, k, a, i…) never ends a line, it is glued to the next word. */
 const ONE_LETTER = /(^|[\s(])([aikosuvzAIKOSUVZ]) /g;
@@ -165,8 +170,18 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
   const [missing, setMissing] = useState<string | null>(null);
   const [done, setDone] = useState<{ contact: boolean } | null>(null);
   const [ready, setReady] = useState(false);
+  // How many items of this person's path are open; the first question is open from the start.
+  const [reached, setReached] = useState(1);
+  const reachedRef = useRef(1);
+  const answersRef = useRef<Answers>({});
+  const scrollTo = useRef<number | null>(null);
   const blocks = useRef<Record<string, HTMLElement | null>>({});
   const honeypot = useRef<HTMLInputElement>(null);
+
+  const setReachedTo = (n: number) => {
+    reachedRef.current = n;
+    setReached(n);
+  };
 
   useEffect(() => {
     const finished = store.get<{ contact: boolean } | true>(DONE_KEY);
@@ -174,8 +189,10 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
     else {
       const d = store.get<Draft>(DRAFT_KEY);
       if (d?.answers) {
+        answersRef.current = d.answers;
         setAnswers(d.answers);
         setOpen(d.open || {});
+        setReachedTo(Math.min(anketaFlow(d.answers).length, Math.max(1, d.reached || 1)));
         setStartedAt(d.startedAt || 0);
       }
     }
@@ -184,14 +201,27 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
 
   useEffect(() => {
     if (!ready || done) return;
-    if (Object.keys(answers).length) store.set(DRAFT_KEY, { answers, open, startedAt } satisfies Draft);
-  }, [ready, done, answers, open, startedAt]);
+    if (Object.keys(answers).length) store.set(DRAFT_KEY, { answers, open, reached, startedAt } satisfies Draft);
+  }, [ready, done, answers, open, reached, startedAt]);
+
+  // Slide down to a newly opened question once it has rendered.
+  useEffect(() => {
+    const i = scrollTo.current;
+    if (i === null) return;
+    scrollTo.current = null;
+    const el = blocks.current[anketaFlow(answersRef.current)[i]];
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - Math.min(96, window.innerHeight * 0.12);
+    window.scrollTo({ top, behavior: reducedMotion() ? 'auto' : 'smooth' });
+  }, [reached]);
 
   const flow = anketaFlow(answers);
   const questionIds = flow.filter((id) => BY_ID.has(id));
   const pathLength = anketaLength(answers);
   const answeredCount = questionIds.filter((id) => isAnswered(BY_ID.get(id)!, answers[id])).length;
-  const resolved = flow.includes(MESSAGE.id); // both branching questions answered
+  const visible = flow.slice(0, reached);
+  // Everything is open: both branching questions answered and the closing message reached.
+  const finished = flow.includes(MESSAGE.id) && reached >= flow.length;
 
   const meetEmailOk = isMeetEmail(meet.email);
   const meetReady =
@@ -202,14 +232,31 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
     id === 'newsletter' ? !newsletterError : id === 'meet' ? isAnswered(BY_ID.get(id)!, answers[id]) && meetReady : !BY_ID.has(id) || isAnswered(BY_ID.get(id)!, answers[id]);
   const flagged = (id: string) => missing === id && !complete(id);
 
-  const answer = (id: string, v: AnswerValue) => {
-    if (!startedAt) setStartedAt(Date.now());
-    setAnswers((a) => ({ ...a, [id]: v }));
-    setError('');
-    if (missing === id) setMissing(null);
+  const reveal = (count: number) => {
+    const n = Math.min(count, anketaFlow(answersRef.current).length);
+    if (n <= reachedRef.current) return;
+    scrollTo.current = n - 1;
+    setReachedTo(n);
   };
 
-  const setCheck = (id: string, on: boolean) => setAnswers((a) => ({ ...a, [id]: on ? 'ano' : 'ne' }));
+  const answer = (q: Question, v: AnswerValue, i: number) => {
+    if (!startedAt) setStartedAt(Date.now());
+    const next = { ...answersRef.current, [q.id]: v };
+    // A different branch: questions below that no longer apply close, the new ones open one by one.
+    const changedAt = firstDiff(anketaFlow(answersRef.current), anketaFlow(next));
+    answersRef.current = next;
+    setAnswers(next);
+    setError('');
+    if (changedAt < reachedRef.current) setReachedTo(changedAt);
+    // Single choice moves on by itself, except when the meeting answer opens the e-mail field.
+    if (q.kind === 'single' && !(q.id === 'meet' && wantsMeeting(v))) setTimeout(() => reveal(i + 2), reducedMotion() ? 0 : 280);
+  };
+
+  const setCheck = (id: string, on: boolean) => {
+    const next = { ...answersRef.current, [id]: on ? 'ano' : 'ne' };
+    answersRef.current = next;
+    setAnswers(next);
+  };
 
   const toggleNewsletter = (on: boolean) => {
     setNewsletter(on);
@@ -229,7 +276,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
     // The first unanswered question on this person's path, top to bottom.
     const gap = questionIds.findIndex((id) => !isAnswered(BY_ID.get(id)!, answers[id]));
     if (gap > -1) return jumpTo(questionIds[gap], `Chybí odpověď u otázky ${flow.indexOf(questionIds[gap]) + 1}.`);
-    if (!resolved) return;
+    if (!finished) return;
     if (!meetReady) {
       return jumpTo(
         'meet',
@@ -306,7 +353,8 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
 
             <FormatCompare />
 
-            {flow.map((id, i) => {
+            {visible.map((id, i) => {
+              const current = reached === i + 1;
               const ref = (el: HTMLElement | null) => {
                 blocks.current[id] = el;
               };
@@ -314,7 +362,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
 
               if (id === MESSAGE.id) {
                 return (
-                  <section key={id} ref={ref} className={s.questionBlock}>
+                  <section key={id} ref={ref} className={`${s.questionBlock} ${s.reveal}`}>
                     <div className={s.qHeader}>
                       {number}
                       <h2 className={s.qText}>
@@ -340,7 +388,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
               const picked = Array.isArray(value) ? value.length : 0;
               const full = q.kind === 'multi' && q.max && picked >= q.max;
               return (
-                <section key={id} ref={ref} className={`${s.questionBlock} ${flagged(id) ? s.questionMissing : ''}`}>
+                <section key={id} ref={ref} className={`${s.questionBlock} ${s.reveal} ${flagged(id) ? s.questionMissing : ''}`}>
                   <div className={s.qHeader}>
                     {number}
                     <h2 className={s.qText}>{cz(q.title)}</h2>
@@ -356,7 +404,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                     <Rank
                       q={q}
                       value={value}
-                      onChange={(v) => answer(id, v)}
+                      onChange={(v) => answer(q, v, i)}
                       checked={q.check ? answers[q.check.id] === 'ano' : false}
                       onCheck={(on) => q.check && setCheck(q.check.id, on)}
                     />
@@ -364,7 +412,7 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                     <Choices
                       q={q}
                       value={value}
-                      onPick={(v) => answer(id, v)}
+                      onPick={(v) => answer(q, v, i)}
                       other={open[otherKey(id)] || ''}
                       onOther={(text) => setOpen((o) => ({ ...o, [otherKey(id)]: text }))}
                     />
@@ -411,16 +459,29 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
                       )}
                     </div>
                   )}
+
+                  {current && (q.kind === 'multi' || q.kind === 'rank' || (id === 'meet' && wantsMeeting(value))) && (
+                    <div className={s.nextRow}>
+                      <button
+                        type="button"
+                        className={s.nextBtn}
+                        disabled={id === 'meet' ? !meetReady : !isAnswered(q, value)}
+                        onClick={() => reveal(i + 2)}
+                      >
+                        Další otázka
+                      </button>
+                    </div>
+                  )}
                 </section>
               );
             })}
 
-            {resolved && (
+            {finished && (
               <section
                 ref={(el) => {
                   blocks.current.newsletter = el;
                 }}
-                className={`${s.questionBlock} ${flagged('newsletter') ? s.questionMissing : ''}`}
+                className={`${s.questionBlock} ${s.reveal} ${flagged('newsletter') ? s.questionMissing : ''}`}
                 aria-labelledby="newsletter-title"
               >
                 <div className={s.qHeader}>
@@ -465,16 +526,18 @@ export default function Anketa({ src, logoSrc }: { src: string; logoSrc: string 
               </section>
             )}
 
-            <footer className={s.surveyFooter}>
-              <button type="button" className={s.submitBtn} disabled={busy} onClick={submit}>
-                {busy ? 'Odesílám…' : ANKETA_TEXT.submit}
-              </button>
-              {error && !(missing && complete(missing)) && (
-                <p className={s.error} role="alert">
-                  {error}
-                </p>
-              )}
-            </footer>
+            {finished && (
+              <footer className={`${s.surveyFooter} ${s.reveal}`}>
+                <button type="button" className={s.submitBtn} disabled={busy} onClick={submit}>
+                  {busy ? 'Odesílám…' : ANKETA_TEXT.submit}
+                </button>
+                {error && !(missing && complete(missing)) && (
+                  <p className={s.error} role="alert">
+                    {error}
+                  </p>
+                )}
+              </footer>
+            )}
           </>
         )}
       </main>
