@@ -67,7 +67,7 @@ export default function RulesPage() {
         </ul>
         <p>
           Zvláštní cenu, {CONTEST.oppoPrize.toLowerCase()}, získá fotka označená {CONTEST.oppoHashtag} s nejvyšším počtem platných
-          hlasů. Poukaz lze uplatnit jen na IoT produkty, tedy chytré hodinky a sluchátka, a to při objednávce nad 2&nbsp;000 Kč.
+          hlasů. Poukaz lze uplatnit jen na IoT produkty, tedy chytré hodinky a sluchátka, a to při objednávce nad 4&nbsp;000 Kč.
           Jeden soutěžící může získat nejvýš jednu výhru, další výhra pak připadne dalšímu v pořadí.
         </p>
 
